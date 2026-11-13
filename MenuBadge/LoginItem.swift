@@ -15,6 +15,14 @@ enum LoginItem {
 
     static var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
 
+    /// Removes the login item regardless of where this copy lives (uninstall).
+    static func unregister() {
+        guard isEnabled else { return }
+        do { try SMAppService.mainApp.unregister() } catch {
+            log.error("Unregistering the login item failed: \(error.localizedDescription)")
+        }
+    }
+
     static func apply(_ on: Bool) {
         guard isInstalledCopy, on != isEnabled else { return }
         do {

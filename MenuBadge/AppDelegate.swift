@@ -11,6 +11,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarItem: MenuBarItem!
 
     static func main() {
+        // Used by scripts/uninstall.sh: drop the login item and exit before starting anything.
+        if CommandLine.arguments.contains("--unregister-login-item") {
+            LoginItem.unregister()
+            exit(0)
+        }
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
