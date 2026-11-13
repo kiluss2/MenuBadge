@@ -5,6 +5,8 @@
 Menu bar app that mirrors apps' **Dock badges** (unread counts) onto the menu bar, so they stay
 visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack only).
 
+<p align="center"><img src="docs/images/demo.gif" width="756" alt="Badge animations: blink, breathe, bounce, ripple, and shake or bounce on a new badge"></p>
+
 - Turn apps on in Settings; each gets its badge on its own menu bar icon, or on a MenuBadge item
   with the app's icon when it has none (Placement: Auto / On the app's icon / MenuBadge item).
   An app whose own icon is switched off in the app (Slack's menu bar icon, for one) has none, so
@@ -109,8 +111,9 @@ open MenuBadge.xcodeproj
 - `BadgeKit/` – pure logic with unit tests (labels, settings, geometry, placement, curves, status
   text).
 - `MenuBadge/` – AppKit/AX/SwiftUI app (readers, overlay, own items, engine, Settings).
-- `swift scripts/make-readme-images.swift` redraws `docs/images/menubar.png`; `settings.png` is a
-  screenshot of the Settings window.
+- `swift scripts/make-readme-images.swift` redraws `docs/images/menubar.png` and
+  `swift scripts/make-readme-demo.swift` redraws `docs/images/demo.gif` (same values as
+  `BadgeAnimations`); `settings.png` is a screenshot of the Settings window.
 - `MENUBADGE_DEMO=<bundle id>` (`1` = Slack) runs every badge state on that app, then quits;
   "Preview All States" in an app's Settings does the same without quitting.
 - `swift scripts/make-appicon.swift` redraws the app icon.
