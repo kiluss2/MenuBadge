@@ -47,7 +47,11 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
         pauseItem.state = store.settings.paused ? .on : .off
     }
 
-    @objc private func showSettings() { openSettings() }
+    /// Opens Settings once the menu has closed, so the window is not ordered behind the
+    /// app that was active when the menu was clicked.
+    @objc private func showSettings() {
+        Task { @MainActor in openSettings() }
+    }
 
     @objc private func togglePause() { store.settings.paused.toggle() }
 }

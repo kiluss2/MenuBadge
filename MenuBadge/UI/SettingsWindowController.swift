@@ -28,8 +28,11 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             window.delegate = self
             self.window = window
         }
+        // A menu bar app is not active when its menu is used, and macOS may turn down the
+        // activation; bring the window to the front anyway so one click is enough.
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
     }
 
     func windowWillClose(_ notification: Notification) {

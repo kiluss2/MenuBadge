@@ -19,6 +19,8 @@ struct AddAppMenu: View {
                     } icon: {
                         Image(nsImage: AppIconCache.menuIcon(for: app.id))
                     }
+                    // The menu's own icon-only style would otherwise hide the app icons.
+                    .labelStyle(.titleAndIcon)
                 }
             }
             Divider()
