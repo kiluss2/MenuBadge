@@ -2,6 +2,13 @@ import Foundation
 import Testing
 import BadgeKit
 
+/// In-memory stand-in for UserDefaults, so tests leave no preference files behind.
+private final class MemoryDefaults: SettingsStorage {
+    private var values: [String: Any] = [:]
+    func data(forKey key: String) -> Data? { values[key] as? Data }
+    func set(_ value: Any?, forKey key: String) { values[key] = value }
+}
+
 @Test func standardMatchesTodaysLook() {
     let s = BadgeAppearance.standard
     #expect(s.corner == .bottomRight && s.size == 12 && s.idle == .blink && s.onNew == .shake)
@@ -30,7 +37,7 @@ import BadgeKit
 }
 
 @MainActor @Test func firstLaunchHasSlackAndPersists() {
-    let d = UserDefaults(suiteName: "MenuBadgeTests.\(UUID())")!
+    let d = MemoryDefaults()
     let store = SettingsStore(defaults: d)
     #expect(store.settings.apps.map(\.id) == ["com.tinyspeck.slackmacgap"])
     store.addApp(bundleID: "ru.keepcoder.Telegram", displayName: "Telegram")
@@ -43,7 +50,7 @@ import BadgeKit
 }
 
 @MainActor @Test func corruptOrNewerDataFallsBackToFirstLaunch() throws {
-    let d = UserDefaults(suiteName: "MenuBadgeTests.\(UUID())")!
+    let d = MemoryDefaults()
     d.set(Data("not json".utf8), forKey: "MenuBadge.settings.v1")
     #expect(SettingsStore(defaults: d).settings == .firstLaunch)
     var future = MenuBadgeSettings.firstLaunch
@@ -63,7 +70,7 @@ import BadgeKit
 }
 
 @MainActor @Test func editingAnAppsLookStoresOnlyDifferences() {
-    let d = UserDefaults(suiteName: "MenuBadgeTests.\(UUID())")!
+    let d = MemoryDefaults()
     let store = SettingsStore(defaults: d)
     let slack = "com.tinyspeck.slackmacgap"
     store[appearanceOf: slack].size = 14
@@ -76,7 +83,7 @@ import BadgeKit
 }
 
 @MainActor @Test func appSubscriptEditsListedAppsAndIgnoresUnknownOnes() {
-    let d = UserDefaults(suiteName: "MenuBadgeTests.\(UUID())")!
+    let d = MemoryDefaults()
     let store = SettingsStore(defaults: d)
     store[app: "com.tinyspeck.slackmacgap"].enabled = false
     #expect(store.settings.apps[0].enabled == false)

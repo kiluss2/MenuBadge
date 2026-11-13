@@ -17,6 +17,10 @@ public struct PlacementInput: Sendable {
     public var iconOnScreen: Bool
     public var lastSeenHadOwnIcon: Bool?
     public var hasBadge: Bool
+    /// The icon was not found on this tick but its absence is not confirmed yet (`IconPresence`).
+    public var iconPending = false
+    /// Show the badge wherever it can be seen (demo / preview).
+    public var forceVisible = false
 
     public init(placement: Placement, visibility: OwnItemVisibility, isRunning: Bool, iconAX: CGRect?,
                 iconOnScreen: Bool, lastSeenHadOwnIcon: Bool?, hasBadge: Bool) {
@@ -27,6 +31,11 @@ public struct PlacementInput: Sendable {
 }
 
 public func resolvePlacement(_ input: PlacementInput) -> PlacementDecision {
+    let usableIcon = input.iconOnScreen ? input.iconAX : nil
+    if input.forceVisible && input.hasBadge {
+        if input.isRunning, input.placement != .ownItem, let icon = usableIcon { return .overlay(iconAX: icon) }
+        return .ownItem(showBadge: true)
+    }
     guard input.isRunning else {
         // Only an app that lives in MenuBadge's item keeps it while closed; an app with its own icon
         // (Slack) shows nothing, so quitting it never makes a MenuBadge item appear.
@@ -36,6 +45,11 @@ public func resolvePlacement(_ input: PlacementInput) -> PlacementDecision {
     }
     if input.placement != .ownItem, let icon = input.iconAX, input.iconOnScreen {
         return input.hasBadge ? .overlay(iconAX: icon) : .none
+    }
+    // Icon missing for a tick or two (launching, quitting, busy): keep a badge visible, but do not
+    // put up an empty MenuBadge item that would vanish a second later.
+    if input.iconPending && input.placement != .ownItem {
+        return input.hasBadge ? .ownItem(showBadge: true) : .none
     }
     // Forced own item, or no usable icon: never lose a badge.
     switch input.visibility {

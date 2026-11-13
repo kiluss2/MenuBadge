@@ -16,6 +16,7 @@ struct DetailView: View {
         case .app(let id):
             if store[entry: id] != nil {
                 AppDetailPane(store: store, engine: engine, bundleID: id)
+                    .id(id) // a new pane per app, so the preview shows this app's icon
             } else {
                 ContentUnavailableView("App Removed", systemImage: "app.dashed")
             }

@@ -32,6 +32,9 @@ struct AppDetailPane: View {
                     BadgePreview(appearance: store[appearanceOf: bundleID], bundleID: bundleID)
                     HStack {
                         Button("Preview All States", systemImage: "play", action: previewAllStates)
+                            .disabled(!entry.enabled)
+                            .help(entry.enabled ? "Shows every badge state in the menu bar"
+                                                : "Turn on Show badge to preview")
                         Button("Reset to Default Look", action: resetLook)
                             .disabled(entry.overrides.isEmpty)
                     }

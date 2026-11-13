@@ -20,12 +20,18 @@ final class BadgeEngine {
     @ObservationIgnored private var appIcons: [String: NSImage] = [:]
     @ObservationIgnored private var timer: Timer?
     @ObservationIgnored private var demo: DemoRun?
+    /// The demo's label for this tick (nil = demo shows no badge right now).
+    @ObservationIgnored private var demoLabel: String?
+    @ObservationIgnored private var iconPresence: [String: IconPresence] = [:]
 
     init(store: SettingsStore) {
         self.store = store
     }
 
     func start() {
+        // A per-element timeout only covers that element, not the menu bar items and Dock tiles read
+        // every tick; the system-wide one covers them all, so a hung app can't block MenuBadge.
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.5)
         trusted = AXIsProcessTrusted()
         let workspace = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
@@ -63,39 +69,46 @@ final class BadgeEngine {
 
         let enabled = store.settings.apps.filter(\.enabled)
         let enabledIDs = Set(enabled.map(\.id))
+        advanceDemo(enabledIDs: enabledIDs)
         for id in Set(overlays.keys).union(ownItems.keys) where !enabledIDs.contains(id) { remove(id) }
         for entry in enabled { update(entry) }
     }
 
     private func update(_ entry: AppEntry) {
         let id = entry.id
-        let app = NSRunningApplication.runningApplications(withBundleIdentifier: id).first
-        var raw = app == nil ? nil : dock.label(for: id)
-        var fromDock = true
-        if let demo, demo.bundleID == id {
-            switch demo.current() {
-            case .label(let forced): raw = forced; fromDock = false
-            case .finished:
-                self.demo = nil
-                if demo.quitWhenDone { NSApp.terminate(nil) }
-            }
-        }
+        var app = NSRunningApplication.runningApplications(withBundleIdentifier: id).first
+        let inDemo = demo?.bundleID == id
+        let raw = inDemo ? demoLabel : (app == nil ? nil : dock.label(for: id))
         let label = BadgeLabel.parse(raw)
         let iconAX = app.flatMap { extras.iconFrame(pid: $0.processIdentifier) }
         let iconOnScreen = iconAX.map(isOnScreen) ?? false
+        // Re-check after the AX calls: an app that quit meanwhile is not running, and one still
+        // launching has not put up its icon yet.
+        if app?.isTerminated == true { app = nil }
 
-        if app != nil {
+        var presence = IconPresence.State.pending
+        if let app {
+            var tracker = iconPresence[id] ?? IconPresence()
+            presence = tracker.observe(found: iconAX != nil && iconOnScreen)
+            if !app.isFinishedLaunching && presence == .absent { presence = .pending }
+            iconPresence[id] = tracker
             store.update(id) { e in
-                e.lastSeenHadOwnIcon = iconAX != nil && iconOnScreen
-                if label != nil && fromDock { e.badgeSeen = true }
+                // Only settled readings are stored, so a launch or quit never flips this.
+                if presence != .pending { e.lastSeenHadOwnIcon = presence == .present }
+                if label != nil && !inDemo { e.badgeSeen = true }
             }
+        } else {
+            iconPresence[id] = nil
         }
         let appearance = store.settings.appearance(for: id)
         let current = store.settings.apps.first { $0.id == id } ?? entry
-        let decision = resolvePlacement(PlacementInput(
+        var input = PlacementInput(
             placement: current.placement, visibility: current.ownItemVisibility, isRunning: app != nil,
             iconAX: iconAX, iconOnScreen: iconOnScreen, lastSeenHadOwnIcon: current.lastSeenHadOwnIcon,
-            hasBadge: label != nil))
+            hasBadge: label != nil)
+        input.iconPending = app != nil && presence == .pending
+        input.forceVisible = inDemo
+        let decision = resolvePlacement(input)
         let location: AppRuntime.Location = switch decision {
         case .none: .hidden
         case .overlay: .appIcon
@@ -123,6 +136,22 @@ final class BadgeEngine {
             ownItems[id] = item
             item.show(showBadge ? label : nil, appearance, appIcon: appIcon(id))
             if grew && showBadge { item.playNew(appearance.onNew) }
+        }
+    }
+
+    /// Steps the demo once per tick, even when its app is not running; ends it when the app is
+    /// switched off or removed (or when it finishes).
+    private func advanceDemo(enabledIDs: Set<String>) {
+        guard let demo else { return }
+        let step: DemoRun.Step = enabledIDs.contains(demo.bundleID) ? demo.current() : .finished
+        switch step {
+        case .label(let forced):
+            demoLabel = forced
+        case .finished:
+            demo.end()
+            self.demo = nil
+            demoLabel = nil
+            if demo.quitWhenDone { NSApp.terminate(nil) }
         }
     }
 

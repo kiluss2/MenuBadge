@@ -1,6 +1,14 @@
 import Foundation
 import Observation
 
+/// Where settings are kept: UserDefaults in the app, memory in tests.
+public protocol SettingsStorage: AnyObject {
+    func data(forKey key: String) -> Data?
+    func set(_ value: Any?, forKey key: String)
+}
+
+extension UserDefaults: SettingsStorage {}
+
 /// Holds the settings and saves every change to UserDefaults as JSON.
 @MainActor @Observable
 public final class SettingsStore {
@@ -8,17 +16,17 @@ public final class SettingsStore {
         didSet { if settings != oldValue { save() } }
     }
 
-    @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let defaults: SettingsStorage
     @ObservationIgnored private let key: String
 
-    public init(defaults: UserDefaults = .standard, key: String = "MenuBadge.settings.v1") {
+    public init(defaults: SettingsStorage = UserDefaults.standard, key: String = "MenuBadge.settings.v1") {
         self.defaults = defaults
         self.key = key
         settings = Self.load(defaults: defaults, key: key)
     }
 
     /// Unreadable or unknown-version data starts over with the first-launch settings.
-    private static func load(defaults: UserDefaults, key: String) -> MenuBadgeSettings {
+    private static func load(defaults: SettingsStorage, key: String) -> MenuBadgeSettings {
         guard let data = defaults.data(forKey: key),
               let decoded = try? JSONDecoder().decode(MenuBadgeSettings.self, from: data),
               decoded.version == MenuBadgeSettings.currentVersion else { return .firstLaunch }

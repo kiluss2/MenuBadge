@@ -9,6 +9,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var engine: BadgeEngine!
     private var settingsWindow: SettingsWindowController!
     private var menuBarItem: MenuBarItem!
+    /// The "Open at login" value last handed to the system; nil until launch reconciled it.
+    private var appliedOpenAtLogin: Bool?
 
     static func main() {
         // Used by scripts/uninstall.sh: drop the login item and exit before starting anything.
@@ -28,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         engine = BadgeEngine(store: store)
         settingsWindow = SettingsWindowController(store: store, engine: engine)
         menuBarItem = MenuBarItem(store: store) { [weak self] in self?.settingsWindow.show() }
+        reconcileLoginItem()
         applySettings()
         observeSettings()
         engine.start()
@@ -51,9 +54,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
+    /// Re-applies what changed; the login item is only touched when its setting changes.
     private func applySettings() {
         menuBarItem.sync()
-        LoginItem.apply(store.settings.openAtLogin)
+        let wanted = store.settings.openAtLogin
+        if wanted != appliedOpenAtLogin {
+            LoginItem.apply(wanted)
+            appliedOpenAtLogin = wanted
+        }
+    }
+
+    private func reconcileLoginItem() {
+        guard LoginItem.isInstalledCopy else {
+            appliedOpenAtLogin = store.settings.openAtLogin // a dev build never touches login items
+            return
+        }
+        let key = "MenuBadge.loginItemSetUp"
+        let result = LoginItemSync.atLaunch(stored: store.settings.openAtLogin, systemEnabled: LoginItem.isEnabled,
+                                            setUpBefore: UserDefaults.standard.bool(forKey: key))
+        store.settings.openAtLogin = result.setting
+        if result.apply { LoginItem.apply(result.setting) }
+        appliedOpenAtLogin = result.setting
+        UserDefaults.standard.set(true, forKey: key)
     }
 
     /// Re-applies the menu bar icon and login item whenever those settings change.

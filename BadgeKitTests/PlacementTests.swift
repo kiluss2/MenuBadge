@@ -37,3 +37,29 @@ private func input(_ p: Placement = .auto, _ v: OwnItemVisibility = .always, run
     #expect(resolvePlacement(input(.ownItem, .onlyWithBadge, badge: false)) == .none)
     #expect(resolvePlacement(input(.ownItem, .onlyWithBadge)) == .ownItem(showBadge: true))
 }
+
+@Test func missingIconIsConfirmedOnlyAfterThreeTicks() {
+    var p = IconPresence()
+    #expect(p.observe(found: false) == .pending)
+    #expect(p.observe(found: false) == .pending)
+    #expect(p.observe(found: false) == .absent)
+    #expect(p.observe(found: true) == .present)
+    #expect(p.observe(found: false) == .pending)   // one miss after seeing it is not enough
+}
+
+@Test func pendingIconShowsNothingUnlessThereIsABadgeToKeep() {
+    var i = input(iconAX: nil, badge: false)
+    i.iconPending = true
+    #expect(resolvePlacement(i) == .none)
+    i.hasBadge = true
+    #expect(resolvePlacement(i) == .ownItem(showBadge: true))
+}
+
+@Test func forceVisibleAlwaysShowsTheBadge() {
+    var notRunning = input(running: false, iconAX: nil, lastOwn: true)
+    notRunning.forceVisible = true
+    #expect(resolvePlacement(notRunning) == .ownItem(showBadge: true))
+    var withIcon = input()
+    withIcon.forceVisible = true
+    #expect(resolvePlacement(withIcon) == .overlay(iconAX: slackIcon))
+}

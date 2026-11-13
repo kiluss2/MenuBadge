@@ -2,9 +2,9 @@ import AppKit
 import BadgeKit
 import SwiftUI
 
-/// Owns the single Settings window.
+/// Owns the single Settings window. Closing it drops its views, so previews stop animating.
 @MainActor
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let store: SettingsStore
     private let engine: BadgeEngine
     private var window: NSWindow?
@@ -12,6 +12,7 @@ final class SettingsWindowController {
     init(store: SettingsStore, engine: BadgeEngine) {
         self.store = store
         self.engine = engine
+        super.init()
     }
 
     func show(selecting selection: SidebarItem = .general) {
@@ -24,9 +25,16 @@ final class SettingsWindowController {
             window.isReleasedWhenClosed = false
             window.center()
             window.setFrameAutosaveName("MenuBadgeSettings")
+            window.delegate = self
             self.window = window
         }
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        window?.contentViewController = nil
+        window?.delegate = nil
+        window = nil
     }
 }
