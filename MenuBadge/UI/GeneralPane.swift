@@ -21,7 +21,17 @@ struct GeneralPane: View {
                 }
             }
             Section("MenuBadge") {
-                Toggle("Show MenuBadge in menu bar", isOn: $store.settings.showMenuBarIcon)
+                Toggle(isOn: $store.settings.showMenuBarIcon) {
+                    Text("Show MenuBadge in menu bar")
+                    if store.settings.compact {
+                        Text("Always shown in compact mode")
+                    }
+                }
+                .disabled(store.settings.compact)
+                Toggle(isOn: $store.settings.compact) {
+                    Text("Gather badges in one item")
+                    Text("For a full menu bar: every badge goes on MenuBadge's icon, so none is hidden with the icons macOS cannot fit. ⌘-drag the icon to keep it near the clock.")
+                }
                 Toggle("Open at login", isOn: $store.settings.openAtLogin)
                 Toggle("Pause all badges", isOn: $store.settings.paused)
             }

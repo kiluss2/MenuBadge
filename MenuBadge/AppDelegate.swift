@@ -29,7 +29,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         store = SettingsStore()
         engine = BadgeEngine(store: store)
         settingsWindow = SettingsWindowController(store: store, engine: engine)
-        menuBarItem = MenuBarItem(store: store) { [weak self] in self?.settingsWindow.show() }
+        menuBarItem = MenuBarItem(store: store, openSettings: { [weak self] in self?.settingsWindow.show() },
+                                  badgeRows: { [weak self] in self?.engine.compactRows() ?? [] })
+        engine.menuBarItem = menuBarItem
         reconcileLoginItem()
         applySettings()
         observeSettings()
@@ -78,14 +80,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         UserDefaults.standard.set(true, forKey: key)
     }
 
-    /// Re-applies the menu bar icon and login item whenever those settings change.
+    /// Re-applies the menu bar icon, compact mode and login item whenever those settings change.
     private func observeSettings() {
         withObservationTracking {
             _ = store.settings.showMenuBarIcon
             _ = store.settings.openAtLogin
+            _ = store.settings.compact
         } onChange: { [weak self] in
             Task { @MainActor in
                 self?.applySettings()
+                self?.engine.tick() // compact on / off shows at once
                 self?.observeSettings()
             }
         }
