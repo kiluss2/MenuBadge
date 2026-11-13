@@ -22,25 +22,12 @@ struct AppearanceEditor: View {
                 .labelsHidden()
             }
             AppearanceRow(title: "Size", field: .size, overrides: overrides, reset: reset) {
-                Slider(value: $appearance.size, in: BadgeAppearance.sizeRange, step: 1) {
-                    Text("Size")
-                } minimumValueLabel: {
-                    Text("\(Int(BadgeAppearance.sizeRange.lowerBound))")
-                } maximumValueLabel: {
-                    Text("\(Int(BadgeAppearance.sizeRange.upperBound))")
-                }
-                .labelsHidden()
+                PointSizeSlider(title: "Size", value: $appearance.size, range: BadgeAppearance.sizeRange)
             }
             AppearanceRow(title: "App icon size", field: .iconSize, overrides: overrides, reset: reset) {
-                Slider(value: $appearance.iconSize, in: BadgeAppearance.iconSizeRange, step: 1) {
-                    Text("App icon size")
-                } minimumValueLabel: {
-                    Text("\(Int(BadgeAppearance.iconSizeRange.lowerBound))")
-                } maximumValueLabel: {
-                    Text("\(Int(BadgeAppearance.iconSizeRange.upperBound))")
-                }
-                .labelsHidden()
-                .help("The app's icon on a MenuBadge item; an app's own menu bar icon keeps its size")
+                PointSizeSlider(title: "App icon size", value: $appearance.iconSize,
+                                range: BadgeAppearance.iconSizeRange)
+                    .help("The app's icon on a MenuBadge item; an app's own menu bar icon keeps its size")
             }
             AppearanceRow(title: "Number colour", field: .countColor, overrides: overrides, reset: reset) {
                 ColorPicker("Number colour", selection: $appearance.countSwatch, supportsOpacity: false)
