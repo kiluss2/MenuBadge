@@ -34,3 +34,9 @@ private func slack(_ placement: Placement = .auto) -> AppEntry {
     #expect(AppStatusText.placementNote(entry: slack(), runtime: .init(isRunning: true, location: .appIcon, hasOwnIcon: true)) == nil)
     #expect(AppStatusText.placementNote(entry: slack(), runtime: .init(isRunning: false, location: .hidden, hasOwnIcon: nil)) == nil)
 }
+
+@Test func statusInCompact() {
+    let compact = AppRuntime(isRunning: true, location: .compactItem, hasOwnIcon: false)
+    #expect(AppStatusText.describe(entry: slack(), runtime: compact) == "Running · MenuBadge item")
+    #expect(AppStatusText.placementNote(entry: slack(), runtime: compact) == nil)
+}

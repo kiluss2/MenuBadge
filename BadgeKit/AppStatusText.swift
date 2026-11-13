@@ -14,6 +14,7 @@ public enum AppStatusText {
             case .ownItem:
                 parts.append("Running · MenuBadge item")
                 if runtime.hasOwnIcon == false && entry.placement != .ownItem { parts.append("no icon of its own") }
+            case .compactItem: parts.append("Running · MenuBadge item")
             case .hidden: parts.append(entry.lastSeenHadOwnIcon == false ? "Running · No badge" : "Running")
             }
         } else {
@@ -25,7 +26,8 @@ public enum AppStatusText {
 
     /// Why the badge is on a MenuBadge item although the placement prefers the app's own icon.
     public static func placementNote(entry: AppEntry, runtime: AppRuntime?) -> String? {
-        guard let runtime, runtime.isRunning, runtime.hasOwnIcon == false, entry.placement != .ownItem else { return nil }
+        guard let runtime, runtime.isRunning, runtime.hasOwnIcon == false, entry.placement != .ownItem,
+              runtime.location != .compactItem else { return nil }
         return "\(entry.displayName) has no menu bar icon of its own right now, so its badge is on a MenuBadge item. "
             + "If \(entry.displayName) has a setting to show its menu bar icon, turn it on and the badge moves onto that icon."
     }

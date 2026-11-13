@@ -1,6 +1,6 @@
 /// What MenuBadge currently sees for one app, shown in Settings.
 public struct AppRuntime: Equatable, Sendable {
-    public enum Location: Equatable, Sendable { case appIcon, ownItem, hidden }
+    public enum Location: Equatable, Sendable { case appIcon, ownItem, hidden, compactItem }
 
     public var isRunning: Bool
     public var location: Location
