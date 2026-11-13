@@ -41,6 +41,9 @@ Downloads the latest release (`MenuBadge.dmg`), installs `~/Applications/MenuBad
 it. Then turn MenuBadge on once in System Settings › Privacy & Security › Accessibility; badges
 start right away. Run the same line again to update.
 
+Or download `MenuBadge.dmg` from the [Releases](https://github.com/kiluss2/MenuBadge/releases/latest)
+page and install it by hand (see the note on **Open Anyway** below).
+
 The release is not notarized (no Apple Developer ID). A file downloaded with `curl` is not marked
 as downloaded from the internet, so macOS opens the app without asking. If you download the DMG
 from the Releases page in a browser instead, drag MenuBadge to Applications, open it once and allow
