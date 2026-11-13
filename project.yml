@@ -1,0 +1,66 @@
+name: MenuBadge
+options:
+  bundleIdPrefix: com.kiluss
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  MenuBadge:
+    type: application
+    platform: macOS
+    sources: [MenuBadge]
+    dependencies:
+      - target: BadgeKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kiluss.menubadge
+        PRODUCT_NAME: MenuBadge
+        # Self-signed identity in the login keychain (see the hub README): TCC keys on it, so
+        # Accessibility survives rebuilds.
+        CODE_SIGN_IDENTITY: "kiluss2 Local Code Signing"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MenuBadge
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_APP_SANDBOX: NO
+  BadgeKit:
+    type: framework
+    platform: macOS
+    sources: [BadgeKit]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kiluss.menubadge.BadgeKit
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"
+  BadgeKitTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [BadgeKitTests]
+    dependencies:
+      - target: BadgeKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kiluss.menubadge.BadgeKitTests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"
+schemes:
+  MenuBadge:
+    build:
+      targets:
+        MenuBadge: all
+  BadgeKit:
+    build:
+      targets:
+        BadgeKit: all
+        BadgeKitTests: [test]
+    test:
+      targets: [BadgeKitTests]
