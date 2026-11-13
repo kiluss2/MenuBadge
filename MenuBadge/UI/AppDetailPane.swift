@@ -6,6 +6,7 @@ struct AppDetailPane: View {
     @Bindable var store: SettingsStore
     let engine: BadgeEngine
     let bundleID: String
+    @State private var replay: PreviewReplay?
 
     var body: some View {
         if let entry = store[entry: bundleID] {
@@ -34,7 +35,7 @@ struct AppDetailPane: View {
                     }
                 }
                 Section {
-                    BadgePreview(appearance: store[appearanceOf: bundleID], bundleID: bundleID)
+                    BadgePreview(appearance: store[appearanceOf: bundleID], bundleID: bundleID, replay: replay)
                     HStack {
                         Button("Preview All States", systemImage: "play", action: previewAllStates)
                             .disabled(!entry.enabled)
@@ -45,7 +46,7 @@ struct AppDetailPane: View {
                     }
                 }
                 AppearanceEditor(appearance: $store[appearanceOf: bundleID], overrides: entry.overrides,
-                                 reset: resetField)
+                                 reset: resetField, picked: playInPreview)
             }
             .formStyle(.grouped)
             .navigationTitle(entry.displayName)
@@ -58,6 +59,10 @@ struct AppDetailPane: View {
 
     private func resetLook() {
         store.update(bundleID) { $0.overrides = AppearanceOverrides() }
+    }
+
+    private func playInPreview(_ field: AppearanceField) {
+        replay = PreviewReplay(field: field)
     }
 
     private func resetField(_ field: AppearanceField) {

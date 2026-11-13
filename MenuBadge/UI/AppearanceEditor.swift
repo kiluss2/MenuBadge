@@ -8,6 +8,8 @@ struct AppearanceEditor: View {
     var overrides: AppearanceOverrides?
     /// Makes one value of the app follow Default Look again.
     var reset: (AppearanceField) -> Void = { _ in }
+    /// Called on every pick of an animation, the selected one included, so the preview plays it.
+    var picked: (AppearanceField) -> Void = { _ in }
 
     var body: some View {
         Section("Look") {
@@ -44,7 +46,7 @@ struct AppearanceEditor: View {
         }
         Section("Animation") {
             AppearanceRow(title: "While shown", field: .idle, overrides: overrides, reset: reset) {
-                Picker("While shown", selection: $appearance.idle) {
+                Picker("While shown", selection: idleSelection) {
                     ForEach(IdleAnimation.allCases, id: \.self) { kind in
                         Text(kind.title).tag(kind)
                     }
@@ -52,7 +54,7 @@ struct AppearanceEditor: View {
                 .labelsHidden()
             }
             AppearanceRow(title: "New badge", field: .onNew, overrides: overrides, reset: reset) {
-                Picker("New badge", selection: $appearance.onNew) {
+                Picker("New badge", selection: onNewSelection) {
                     ForEach(NewBadgeEffect.allCases, id: \.self) { effect in
                         Text(effect.title).tag(effect)
                     }
@@ -60,5 +62,15 @@ struct AppearanceEditor: View {
                 .labelsHidden()
             }
         }
+    }
+
+    // Custom bindings on purpose: picking the value that is already selected must still reach the
+    // preview, and onChange(of:) does not fire for an unchanged value.
+    private var idleSelection: Binding<IdleAnimation> {
+        Binding(get: { appearance.idle }, set: { appearance.idle = $0; picked(.idle) })
+    }
+
+    private var onNewSelection: Binding<NewBadgeEffect> {
+        Binding(get: { appearance.onNew }, set: { appearance.onNew = $0; picked(.onNew) })
     }
 }

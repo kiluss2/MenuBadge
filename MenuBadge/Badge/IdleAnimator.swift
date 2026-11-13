@@ -16,13 +16,20 @@ final class IdleAnimator {
         self.ring = ring
     }
 
-    /// Starts `kind`; calling again with the same kind while it runs changes nothing. `playNow`
-    /// plays it once right away instead of after the first pause (Settings, when it is picked).
-    func start(_ kind: IdleAnimation, playNow: Bool = false) {
+    /// Starts `kind`; calling again with the same kind while it runs changes nothing.
+    func start(_ kind: IdleAnimation) {
         guard kind != self.kind else { return }
         stop()
         self.kind = kind
-        if playNow { fire() } else { schedule() }
+        schedule()
+    }
+
+    /// Plays the current animation once now, then goes on with the usual pauses (Settings, when
+    /// the animation is picked).
+    func playNow() {
+        timer?.invalidate()
+        timer = nil
+        fire()
     }
 
     func stop() {

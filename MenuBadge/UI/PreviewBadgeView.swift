@@ -43,17 +43,22 @@ final class PreviewBadgeView: NSView {
 
     override var intrinsicContentSize: NSSize { NSSize(width: NSView.noIntrinsicMetric, height: 44) }
 
-    /// Shows `a`. A changed animation plays right away so it can be judged when picked: a new
-    /// "While shown" animation at once, a new "New badge" effect at once; other changes play none.
     func apply(_ a: BadgeAppearance) {
-        let old = look
         look = a
         layoutSamples()
-        let idleChanged = old != nil && old?.idle != a.idle
-        let effectChanged = old != nil && old?.onNew != a.onNew
+        for sample in samples { sample.idle.start(a.idle) }
+    }
+
+    /// Plays the "While shown" animation or the "New badge" effect now, so a pick can be judged
+    /// at once instead of after the idle pause.
+    func play(_ field: AppearanceField) {
+        guard let a = look else { return }
         for sample in samples {
-            sample.idle.start(a.idle, playNow: idleChanged)
-            if effectChanged { BadgeAnimations.playNew(a.onNew, on: sample.badge) }
+            switch field {
+            case .idle: sample.idle.playNow()
+            case .onNew: BadgeAnimations.playNew(a.onNew, on: sample.badge)
+            default: break
+            }
         }
     }
 

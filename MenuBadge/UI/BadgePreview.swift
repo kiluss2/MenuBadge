@@ -7,6 +7,14 @@ struct BadgePreview: NSViewRepresentable {
     let appearance: BadgeAppearance
     /// nil shows a generic icon (for the default look).
     let bundleID: String?
+    /// The last animation picked in the editor; each new one plays once.
+    var replay: PreviewReplay?
+
+    final class Coordinator {
+        var played: UUID?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> PreviewBadgeView {
         PreviewBadgeView(icon: icon)
@@ -14,6 +22,10 @@ struct BadgePreview: NSViewRepresentable {
 
     func updateNSView(_ view: PreviewBadgeView, context: Context) {
         view.apply(appearance)
+        if let replay, replay.id != context.coordinator.played {
+            context.coordinator.played = replay.id
+            view.play(replay.field)
+        }
     }
 
     private var icon: NSImage {
