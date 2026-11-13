@@ -108,3 +108,7 @@ open MenuBadge.xcodeproj
 - `MENUBADGE_DEMO=<bundle id>` (`1` = Slack) runs every badge state on that app, then quits;
   "Preview All States" in an app's Settings does the same without quitting.
 - `swift scripts/make-appicon.swift` redraws the app icon.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
