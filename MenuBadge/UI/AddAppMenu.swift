@@ -11,7 +11,15 @@ struct AddAppMenu: View {
     var body: some View {
         Menu("Add App", systemImage: "plus") {
             ForEach(RunningApps.candidates(excluding: Set(store.settings.apps.map(\.id)))) { app in
-                Button(app.name) { add(app) }
+                Button {
+                    add(app)
+                } label: {
+                    Label {
+                        Text(app.name)
+                    } icon: {
+                        Image(nsImage: AppIconCache.menuIcon(for: app.id))
+                    }
+                }
             }
             Divider()
             Button("Choose from Applications…", action: chooseFromApplications)

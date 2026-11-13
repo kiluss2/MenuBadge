@@ -6,6 +6,7 @@ import BadgeKit
 enum AppIconCache {
     private static var icons: [String: NSImage] = [:]
     private static var menuBarIcons: [String: NSImage] = [:]
+    private static var menuIcons: [String: NSImage] = [:]
 
     static func icon(for bundleID: String) -> NSImage {
         if let icon = icons[bundleID] { return icon }
@@ -17,6 +18,15 @@ enum AppIconCache {
         }
         icons[bundleID] = icon
         return icon
+    }
+
+    /// A 16 pt copy for menu items, like the icons in Finder's "Open With" menu.
+    static func menuIcon(for bundleID: String) -> NSImage {
+        if let icon = menuIcons[bundleID] { return icon }
+        let small = (icon(for: bundleID).copy() as? NSImage) ?? NSImage()
+        small.size = NSSize(width: 16, height: 16)
+        menuIcons[bundleID] = small
+        return small
     }
 
     /// The icon for the menu bar, with the transparent margin app icons are drawn with (about a
