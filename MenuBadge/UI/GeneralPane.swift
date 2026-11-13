@@ -5,6 +5,7 @@ import SwiftUI
 struct GeneralPane: View {
     @Bindable var store: SettingsStore
     let engine: BadgeEngine
+    @Environment(UpdateChecker.self) private var updater
 
     var body: some View {
         Form {
@@ -35,6 +36,22 @@ struct GeneralPane: View {
                 Toggle("Open at login", isOn: $store.settings.openAtLogin)
                 Toggle("Pause all badges", isOn: $store.settings.paused)
             }
+            Section("Updates") {
+                Toggle("Check for updates automatically", isOn: $store.settings.checkForUpdates)
+                if let update = updater.available {
+                    LabeledContent("MenuBadge \(update.version) is available") {
+                        Button("Update", action: updater.install)
+                    }
+                    Link("Release notes", destination: update.pageURL)
+                } else {
+                    LabeledContent(updateStatus) {
+                        Button("Check for Updates…") {
+                            Task { await updater.checkNow(manual: true) }
+                        }
+                        .disabled(updater.status == .checking)
+                    }
+                }
+            }
             Section {
                 Text("Hidden from the menu bar, MenuBadge still opens its settings when you open the app again from Spotlight, Launchpad or Finder.")
                     .foregroundStyle(.secondary)
@@ -42,6 +59,15 @@ struct GeneralPane: View {
         }
         .formStyle(.grouped)
         .navigationTitle("General")
+    }
+
+    private var updateStatus: String {
+        switch updater.status {
+        case .idle: "Version \(UpdateChecker.currentVersion)"
+        case .checking: "Checking…"
+        case .upToDate: "MenuBadge is up to date"
+        case .failed: "Could not check for updates"
+        }
     }
 
     private func openPrivacySettings() {

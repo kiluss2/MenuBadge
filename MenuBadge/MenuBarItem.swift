@@ -16,6 +16,8 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
     private let openSettings: () -> Void
     private let badgeRows: () -> [BadgeRow]
     private var item: NSStatusItem?
+    /// Adds "Update to X…" when a newer release is known, and "Check for Updates…".
+    weak var updater: UpdateChecker?
     private let pauseItem = NSMenuItem(title: "Pause All Badges", action: #selector(togglePause), keyEquivalent: "")
     /// What compact mode shows now; nil = the plain glyph.
     private var compact: (layout: CompactLayout, appearances: [String: BadgeAppearance])?
@@ -90,9 +92,27 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
         settings.target = self
         pauseItem.target = self
         pauseItem.state = store.settings.paused ? .on : .off
-        let quit = NSMenuItem(title: "Quit MenuBadge", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        for item in [settings, pauseItem, .separator(), quit] { menu.addItem(item) }
+        let check = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+        check.target = self
+        var items = [settings, pauseItem, check, .separator()]
+        if let update = updater?.available {
+            let install = NSMenuItem(title: "Update to \(update.version)…", action: #selector(installUpdate), keyEquivalent: "")
+            install.target = self
+            items.append(install)
+        }
+        items.append(NSMenuItem(title: "Quit MenuBadge", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        for item in items { menu.addItem(item) }
     }
+
+    /// Shows Settings › General, where the check's result appears.
+    @objc private func checkForUpdates() {
+        Task { @MainActor in
+            openSettings()
+            await updater?.checkNow(manual: true)
+        }
+    }
+
+    @objc private func installUpdate() { updater?.install() }
 
     /// "Slack        3": name on the left, badge text right-aligned; opens the app.
     private func appItem(_ row: BadgeRow) -> NSMenuItem {

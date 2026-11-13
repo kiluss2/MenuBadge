@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var engine: BadgeEngine!
     private var settingsWindow: SettingsWindowController!
     private var menuBarItem: MenuBarItem!
+    private var updater: UpdateChecker!
     /// The "Open at login" value last handed to the system; nil until launch reconciled it.
     private var appliedOpenAtLogin: Bool?
 
@@ -28,10 +29,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         store = SettingsStore()
         engine = BadgeEngine(store: store)
-        settingsWindow = SettingsWindowController(store: store, engine: engine)
+        updater = UpdateChecker(store: store)
+        settingsWindow = SettingsWindowController(store: store, engine: engine, updater: updater)
         menuBarItem = MenuBarItem(store: store, openSettings: { [weak self] in self?.settingsWindow.show() },
                                   badgeRows: { [weak self] in self?.engine.compactRows() ?? [] })
         engine.menuBarItem = menuBarItem
+        menuBarItem.updater = updater
         reconcileLoginItem()
         applySettings()
         observeSettings()
@@ -42,6 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             engine.runDemo(bundleID: demo == "1" ? "com.tinyspeck.slackmacgap" : demo, quitWhenDone: true)
             return
         }
+        updater.start()
         if !AXIsProcessTrusted() {
             // "AXTrustedCheckOptionPrompt" is the value of kAXTrustedCheckOptionPrompt, a C global
             // that Swift 6 refuses to read as non-concurrency-safe.

@@ -7,17 +7,20 @@ import SwiftUI
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let store: SettingsStore
     private let engine: BadgeEngine
+    private let updater: UpdateChecker
     private var window: NSWindow?
 
-    init(store: SettingsStore, engine: BadgeEngine) {
+    init(store: SettingsStore, engine: BadgeEngine, updater: UpdateChecker) {
         self.store = store
         self.engine = engine
+        self.updater = updater
         super.init()
     }
 
     func show(selecting selection: SidebarItem = .general) {
         if window == nil {
             let root = SettingsView(store: store, engine: engine, initialSelection: selection)
+                .environment(updater)
             let window = NSWindow(contentViewController: NSHostingController(rootView: root))
             window.title = "MenuBadge"
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]

@@ -17,7 +17,11 @@ targets:
   MenuBadge:
     type: application
     platform: macOS
-    sources: [MenuBadge]
+    sources:
+      - MenuBadge
+      # The updater runs this copy, never a script fetched at update time.
+      - path: scripts/install-release.sh
+        buildPhase: resources
     dependencies:
       - target: BadgeKit
     settings:
