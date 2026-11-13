@@ -10,9 +10,11 @@ public enum Placement: String, Codable, CaseIterable, Sendable {
     case ownItem
 }
 
-/// When MenuBadge's own item for an app is in the menu bar.
+/// When MenuBadge's own item for an app is in the menu bar (never once the app has quit).
 public enum OwnItemVisibility: String, Codable, CaseIterable, Sendable {
-    case always, onlyWithBadge
+    /// While the app is open, badge or not.
+    case always
+    case onlyWithBadge
 }
 
 /// One app the user added.

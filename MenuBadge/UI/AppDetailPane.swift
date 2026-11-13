@@ -23,10 +23,10 @@ struct AppDetailPane: View {
                         Text("MenuBadge item").tag(Placement.ownItem)
                     }
                     Picker("MenuBadge item", selection: $store[app: bundleID].ownItemVisibility) {
-                        Text("Always").tag(OwnItemVisibility.always)
+                        Text("While the app is open").tag(OwnItemVisibility.always)
                         Text("Only with a badge").tag(OwnItemVisibility.onlyWithBadge)
                     }
-                    Text("Auto puts the badge on the app's own menu bar icon, or on a MenuBadge item with the app's icon when it has none.")
+                    Text("Auto puts the badge on the app's own menu bar icon, or on a MenuBadge item with the app's icon when it has none. A MenuBadge item goes away when its app quits.")
                         .foregroundStyle(.secondary)
                     if let note = AppStatusText.placementNote(entry: entry, runtime: engine.runtime[bundleID]) {
                         Label(note, systemImage: "info.circle")

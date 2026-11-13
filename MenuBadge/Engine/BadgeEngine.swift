@@ -35,7 +35,11 @@ final class BadgeEngine {
         let workspace = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
             workspace.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.resetReaders() }
+                MainActor.assumeIsolated {
+                    self?.resetReaders()
+                    // Right away rather than on the next tick: a quit app's MenuBadge item goes at once.
+                    self?.tick()
+                }
             }
         }
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
@@ -103,8 +107,7 @@ final class BadgeEngine {
         let current = store.settings.apps.first { $0.id == id } ?? entry
         var input = PlacementInput(
             placement: current.placement, visibility: current.ownItemVisibility, isRunning: app != nil,
-            iconAX: iconAX, iconOnScreen: iconOnScreen, lastSeenHadOwnIcon: current.lastSeenHadOwnIcon,
-            hasBadge: label != nil)
+            iconAX: iconAX, iconOnScreen: iconOnScreen, hasBadge: label != nil)
         input.iconPending = app != nil && presence == .pending
         input.forceVisible = inDemo
         let decision = resolvePlacement(input)

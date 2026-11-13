@@ -6,8 +6,9 @@ visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack
 - Turn apps on in Settings; each gets its badge on its own menu bar icon, or on a MenuBadge item
   with the app's icon when it has none (Placement: Auto / On the app's icon / MenuBadge item).
   An app whose own icon is switched off in the app (Slack's menu bar icon, for one) has none, so
-  its badge goes on a MenuBadge item; Settings says so. ⌘-drag a MenuBadge item to move it; the
-  place is kept.
+  its badge goes on a MenuBadge item; Settings says so. A MenuBadge item shows while its app is
+  open (or only with a badge) and goes away when the app quits. ⌘-drag it to move it; the place
+  is kept.
 - Per-app look on top of a shared default: corner, size (8–16 pt), number / dot / text colours,
   animation while shown (Blink, Breathe, Bounce, Ripple, None) and on a new badge (Shake, Bounce,
   None). Each value on an app's page says whether it is set for the app or comes from Default
