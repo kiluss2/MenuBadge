@@ -90,3 +90,53 @@ private final class MemoryDefaults: SettingsStorage {
     store[app: "not.listed"].enabled = false
     #expect(store.settings.apps.map(\.id) == ["com.tinyspeck.slackmacgap"])
 }
+
+@MainActor @Test func settingsMissingNewerFieldsKeepTheRest() {
+    let d = MemoryDefaults()
+    let json = #"{"version":1,"apps":[{"id":"ru.keepcoder.Telegram","displayName":"Telegram","placement":"ownItem"}]}"#
+    d.set(Data(json.utf8), forKey: "MenuBadge.settings.v1")
+    let s = SettingsStore(defaults: d).settings
+    #expect(s.apps.map(\.id) == ["ru.keepcoder.Telegram"])
+    #expect(s.apps[0].placement == .ownItem && s.apps[0].enabled && s.apps[0].ownItemVisibility == .always)
+    #expect(s.defaults == .standard && s.showMenuBarIcon && s.openAtLogin && !s.paused)
+}
+
+@MainActor @Test func unknownValueResetsOnlyThatField() {
+    let d = MemoryDefaults()
+    let json = #"""
+    {"version":1,"defaults":{"corner":"middle","size":14},"paused":true,
+     "apps":[{"id":"a.b","displayName":"AB","placement":"somewhere","overrides":{"idle":"spin","size":10}}]}
+    """#
+    d.set(Data(json.utf8), forKey: "MenuBadge.settings.v1")
+    let s = SettingsStore(defaults: d).settings
+    #expect(s.paused)
+    #expect(s.defaults.corner == .bottomRight && s.defaults.size == 14 && s.defaults.idle == .blink)
+    #expect(s.apps.map(\.id) == ["a.b"] && s.apps[0].placement == .auto)
+    #expect(s.apps[0].overrides.idle == nil && s.apps[0].overrides.size == 10)
+}
+
+@MainActor @Test func unreadableSettingsAreKeptAside() {
+    let d = MemoryDefaults()
+    _ = SettingsStore(defaults: d)
+    #expect(d.data(forKey: "MenuBadge.settings.v1.unreadable") == nil)
+    d.set(Data("not json".utf8), forKey: "MenuBadge.settings.v1")
+    _ = SettingsStore(defaults: d)
+    #expect(d.data(forKey: "MenuBadge.settings.v1.unreadable") == Data("not json".utf8))
+}
+
+@Test func overridesReportAndClearOneField() {
+    var o = AppearanceOverrides()
+    o.corner = .topLeft
+    o.countColor = .white
+    #expect(o.isSet(.corner) && o.isSet(.countColor) && !o.isSet(.size))
+    o.clear(.corner)
+    #expect(!o.isSet(.corner) && o.isSet(.countColor))
+    for field in AppearanceField.allCases {
+        var all = AppearanceOverrides(diff: .init(corner: .topLeft, size: 9, countColor: .white, dotColor: .white,
+                                                  textColor: .mentionRed, idle: .none, onNew: .none),
+                                      from: .standard)
+        #expect(all.isSet(field))
+        all.clear(field)
+        #expect(!all.isSet(field))
+    }
+}

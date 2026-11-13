@@ -17,7 +17,6 @@ final class BadgeEngine {
     @ObservationIgnored private var overlays: [String: OverlayPresenter] = [:]
     @ObservationIgnored private var ownItems: [String: OwnItemPresenter] = [:]
     @ObservationIgnored private var lastLabels: [String: BadgeLabel] = [:]
-    @ObservationIgnored private var appIcons: [String: NSImage] = [:]
     @ObservationIgnored private var timer: Timer?
     @ObservationIgnored private var demo: DemoRun?
     /// The demo's label for this tick (nil = demo shows no badge right now).
@@ -114,7 +113,8 @@ final class BadgeEngine {
         case .overlay: .appIcon
         case .ownItem: .ownItem
         }
-        let status = AppRuntime(isRunning: app != nil, location: location)
+        let hasOwnIcon: Bool? = app == nil || presence == .pending ? nil : presence == .present
+        let status = AppRuntime(isRunning: app != nil, location: location, hasOwnIcon: hasOwnIcon)
         if runtime[id] != status { runtime[id] = status }
         let grew = label.map { isNewBadge(old: lastLabels[id], new: $0) } ?? false
         lastLabels[id] = label
@@ -134,7 +134,7 @@ final class BadgeEngine {
             overlays[id]?.hide()
             let item = ownItems[id] ?? OwnItemPresenter(bundleID: id)
             ownItems[id] = item
-            item.show(showBadge ? label : nil, appearance, appIcon: appIcon(id))
+            item.show(showBadge ? label : nil, appearance, appIcon: AppIconCache.menuBarIcon(for: id))
             if grew && showBadge { item.playNew(appearance.onNew) }
         }
     }
@@ -159,19 +159,6 @@ final class BadgeEngine {
         guard let primary = NSScreen.screens.first else { return false }
         let cocoa = BadgeGeometry.axToCocoa(axRect, primaryScreenMaxY: primary.frame.maxY)
         return NSScreen.screens.contains { $0.frame.intersects(cocoa) }
-    }
-
-    private func appIcon(_ id: String) -> NSImage {
-        if let icon = appIcons[id] { return icon }
-        let icon: NSImage
-        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) {
-            icon = NSWorkspace.shared.icon(forFile: url.path)
-        } else {
-            icon = NSImage(systemSymbolName: "app", accessibilityDescription: nil) ?? NSImage()
-        }
-        icon.size = NSSize(width: 16, height: 16)
-        appIcons[id] = icon
-        return icon
     }
 
     private func resetReaders() {

@@ -16,7 +16,8 @@ struct SidebarView: View {
             }
             Section("Apps") {
                 ForEach($store.settings.apps) { $entry in
-                    AppRow(entry: $entry, runtime: engine.runtime[entry.id])
+                    AppRow(entry: $entry, runtime: engine.runtime[entry.id], paused: store.settings.paused,
+                           trusted: engine.trusted)
                         .tag(SidebarItem.app(entry.id))
                 }
             }

@@ -6,6 +6,8 @@ import SwiftUI
 struct AppRow: View {
     @Binding var entry: AppEntry
     let runtime: AppRuntime?
+    let paused: Bool
+    let trusted: Bool
 
     var body: some View {
         HStack {
@@ -15,7 +17,7 @@ struct AppRow: View {
                 .accessibilityHidden(true)
             VStack(alignment: .leading) {
                 Text(entry.displayName)
-                Text(AppStatusText.describe(entry: entry, runtime: runtime))
+                Text(AppStatusText.describe(entry: entry, runtime: runtime, paused: paused, trusted: trusted))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -12,8 +12,9 @@ struct AppDetailPane: View {
             Form {
                 Section {
                     Toggle("Show badge", isOn: $store[app: bundleID].enabled)
-                    LabeledContent("Status", value: AppStatusText.describe(entry: entry,
-                                                                           runtime: engine.runtime[bundleID]))
+                    LabeledContent("Status", value: AppStatusText.describe(
+                        entry: entry, runtime: engine.runtime[bundleID], paused: store.settings.paused,
+                        trusted: engine.trusted))
                 }
                 Section("Where") {
                     Picker("Placement", selection: $store[app: bundleID].placement) {
@@ -27,6 +28,10 @@ struct AppDetailPane: View {
                     }
                     Text("Auto puts the badge on the app's own menu bar icon, or on a MenuBadge item with the app's icon when it has none.")
                         .foregroundStyle(.secondary)
+                    if let note = AppStatusText.placementNote(entry: entry, runtime: engine.runtime[bundleID]) {
+                        Label(note, systemImage: "info.circle")
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Section {
                     BadgePreview(appearance: store[appearanceOf: bundleID], bundleID: bundleID)
@@ -39,7 +44,8 @@ struct AppDetailPane: View {
                             .disabled(entry.overrides.isEmpty)
                     }
                 }
-                AppearanceEditor(appearance: $store[appearanceOf: bundleID])
+                AppearanceEditor(appearance: $store[appearanceOf: bundleID], overrides: entry.overrides,
+                                 reset: resetField)
             }
             .formStyle(.grouped)
             .navigationTitle(entry.displayName)
@@ -52,5 +58,9 @@ struct AppDetailPane: View {
 
     private func resetLook() {
         store.update(bundleID) { $0.overrides = AppearanceOverrides() }
+    }
+
+    private func resetField(_ field: AppearanceField) {
+        store.update(bundleID) { $0.overrides.clear(field) }
     }
 }

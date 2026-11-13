@@ -7,8 +7,18 @@ import BadgeKit
     #expect(BadgeLabel.parse("•") == .dot)
     #expect(BadgeLabel.parse("●") == .dot)
     #expect(BadgeLabel.parse("3") == .count("3"))
-    #expect(BadgeLabel.parse("1234567") == .count("1234"))
     #expect(BadgeLabel.parse(" New! ") == .count("New!"))
+}
+
+@Test func bigCountsAreCappedAt999Plus() {
+    #expect(BadgeLabel.parse("999") == .count("999"))
+    #expect(BadgeLabel.parse("1000") == .count("999+"))
+    #expect(BadgeLabel.parse("1234567") == .count("999+"))
+    #expect(BadgeLabel.parse("1,234") == .count("999+"))
+    #expect(BadgeLabel.parse("12 345") == .count("999+"))
+    #expect(BadgeLabel.parse("1000+") == .count("999+"))
+    #expect(BadgeLabel.parse("99+") == .count("99+"))
+    #expect(BadgeLabel.parse("Hello") == .count("Hell")) // text is still cut to 4 characters
 }
 
 @Test func numericValues() {

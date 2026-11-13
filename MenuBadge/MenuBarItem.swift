@@ -26,6 +26,9 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
 
     private func makeItem() -> NSStatusItem {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        // Keeps the place the user ⌘-drags the icon to across launches.
+        item.autosaveName = "MenuBadge"
+        item.isVisible = true
         let image = NSImage(systemSymbolName: "app.badge", accessibilityDescription: "MenuBadge")
         image?.isTemplate = true
         item.button?.image = image

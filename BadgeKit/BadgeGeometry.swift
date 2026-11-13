@@ -47,4 +47,19 @@ public enum BadgeGeometry {
     public static func axToCocoa(_ r: CGRect, primaryScreenMaxY: Double) -> CGRect {
         CGRect(x: r.minX, y: primaryScreenMaxY - r.maxY, width: r.width, height: r.height)
     }
+
+    /// Width of the icon MenuBadge draws in its own item for an app.
+    public static let ownItemIconSize: Double = 16
+
+    /// MenuBadge's own item: room for the icon plus a badge on its corner; wider only when a pill
+    /// ("999+" at a large size) would not fit, so the item keeps its width as counts change.
+    public static func ownItemLength(size: Double, badgeWidth: Double) -> Double {
+        max(ownItemIconSize + size + 4, badgeWidth + 4)
+    }
+
+    /// Room around a badge in the overlay panel for the 2.2x ripple ring (0.6 of the badge on each
+    /// side), the bounce and the shake, per axis so wide pills are not clipped.
+    public static func overlayPadding(badgeSize: CGSize) -> CGSize {
+        CGSize(width: (badgeSize.width * 0.6).rounded(.up) + 6, height: (badgeSize.height * 0.6).rounded(.up) + 6)
+    }
 }

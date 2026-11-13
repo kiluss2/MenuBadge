@@ -24,7 +24,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kiluss.menubadge
         PRODUCT_NAME: MenuBadge
-        # Self-signed identity in the login keychain (see the hub README): TCC keys on it, so
+        # Self-signed identity in the login keychain (see README.md): TCC keys on it, so
         # Accessibility survives rebuilds.
         CODE_SIGN_IDENTITY: "kiluss2 Local Code Signing"
         GENERATE_INFOPLIST_FILE: YES

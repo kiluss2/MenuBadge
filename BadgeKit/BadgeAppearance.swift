@@ -46,6 +46,19 @@ public struct BadgeAppearance: Codable, Equatable, Hashable, Sendable {
 
     public static let sizeRange: ClosedRange<Double> = 8...16
 
+    /// A missing or unknown field takes the standard look's value.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let s = Self.standard
+        corner = c.lenient(Corner.self, .corner) ?? s.corner
+        size = c.lenient(Double.self, .size) ?? s.size
+        countColor = c.lenient(RGBA.self, .countColor) ?? s.countColor
+        dotColor = c.lenient(RGBA.self, .dotColor) ?? s.dotColor
+        textColor = c.lenient(RGBA.self, .textColor) ?? s.textColor
+        idle = c.lenient(IdleAnimation.self, .idle) ?? s.idle
+        onNew = c.lenient(NewBadgeEffect.self, .onNew) ?? s.onNew
+    }
+
     /// The look slack-menubar-badge shipped with.
     public static let standard = BadgeAppearance(
         corner: .bottomRight, size: 12, countColor: .mentionRed, dotColor: .dotBlue, textColor: .white,
@@ -63,6 +76,18 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
     public var onNew: NewBadgeEffect?
 
     public init() {}
+
+    /// A missing or unknown field follows the default look.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        corner = c.lenient(Corner.self, .corner)
+        size = c.lenient(Double.self, .size)
+        countColor = c.lenient(RGBA.self, .countColor)
+        dotColor = c.lenient(RGBA.self, .dotColor)
+        textColor = c.lenient(RGBA.self, .textColor)
+        idle = c.lenient(IdleAnimation.self, .idle)
+        onNew = c.lenient(NewBadgeEffect.self, .onNew)
+    }
 
     /// Overrides for the fields of `look` that differ from `base`; equal fields follow the default.
     public init(diff look: BadgeAppearance, from base: BadgeAppearance) {
@@ -87,5 +112,38 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
             textColor: textColor ?? base.textColor,
             idle: idle ?? base.idle,
             onNew: onNew ?? base.onNew)
+    }
+}
+
+/// One editable field of a badge's look.
+public enum AppearanceField: CaseIterable, Sendable {
+    case corner, size, countColor, dotColor, textColor, idle, onNew
+}
+
+extension AppearanceOverrides {
+    /// Whether this app sets `field` itself instead of following the default look.
+    public func isSet(_ field: AppearanceField) -> Bool {
+        switch field {
+        case .corner: corner != nil
+        case .size: size != nil
+        case .countColor: countColor != nil
+        case .dotColor: dotColor != nil
+        case .textColor: textColor != nil
+        case .idle: idle != nil
+        case .onNew: onNew != nil
+        }
+    }
+
+    /// Makes `field` follow the default look again.
+    public mutating func clear(_ field: AppearanceField) {
+        switch field {
+        case .corner: corner = nil
+        case .size: size = nil
+        case .countColor: countColor = nil
+        case .dotColor: dotColor = nil
+        case .textColor: textColor = nil
+        case .idle: idle = nil
+        case .onNew: onNew = nil
+        }
     }
 }

@@ -18,17 +18,18 @@ final class OwnItemPresenter: NSObject {
     /// `label` nil shows the app icon alone.
     func show(_ label: BadgeLabel?, _ a: BadgeAppearance, appIcon: NSImage) {
         let item = self.item ?? makeItem()
+        let badgeSize = label.map { BadgeRenderer.badgeSize($0, a) }
         // Wide enough that a badge on the 16 pt icon's corner is not cut off by the item.
-        item.length = 16 + a.size + 4
+        let length = BadgeGeometry.ownItemLength(size: a.size, badgeWidth: badgeSize.map { Double($0.width) } ?? 0)
+        if item.length != length { item.length = length }
         guard let button = item.button else { return }
         if button.image !== appIcon { button.image = appIcon }
 
-        guard let label, let host = button.layer else {
+        guard let label, let size = badgeSize, let host = button.layer else {
             badgeLayer.isHidden = true
             idle.stop()
             return
         }
-        let size = BadgeRenderer.badgeSize(label, a)
         let bounds = button.bounds
         // Geometry works top-down like AX; flip when the button's layer is bottom-up.
         var rect = BadgeGeometry.clamped(
@@ -67,6 +68,9 @@ final class OwnItemPresenter: NSObject {
 
     private func makeItem() -> NSStatusItem {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Keeps the place the user ⌘-drags the item to, across launches and hide / show.
+        item.autosaveName = "MenuBadge.app.\(bundleID)"
+        item.isVisible = true
         item.button?.wantsLayer = true
         item.button?.imagePosition = .imageOnly
         item.button?.target = self

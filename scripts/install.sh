@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build MenuBadge (Release) and install it as ~/Applications/MenuBadge.app, replacing
 # slack-menubar-badge on first install. Accessibility is granted once and survives reinstalls
-# because the app is signed with the "kiluss2 Local Code Signing" identity (see the hub README).
+# because the app is signed with the "kiluss2 Local Code Signing" identity (see README.md).
 # Uninstall: scripts/uninstall.sh
 set -euo pipefail
 
@@ -16,7 +16,7 @@ SIGN=()
 # grep without -q reads all input, so `security` never dies of SIGPIPE under pipefail.
 if ! security find-identity -p codesigning | grep "\"$IDENTITY\"" >/dev/null; then
   echo "note: '$IDENTITY' is not in the keychain; signing ad-hoc, so Accessibility must be" \
-       "granted again after every install. The hub README shows how to create the identity."
+       "granted again after every install. README.md shows how to create the identity."
   SIGN=(CODE_SIGN_IDENTITY=-)
 fi
 

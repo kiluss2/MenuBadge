@@ -25,11 +25,15 @@ public final class SettingsStore {
         settings = Self.load(defaults: defaults, key: key)
     }
 
-    /// Unreadable or unknown-version data starts over with the first-launch settings.
+    /// Unreadable or unknown-version data starts over with the first-launch settings; the old data
+    /// is kept under `<key>.unreadable` so it can still be recovered by hand.
     private static func load(defaults: SettingsStorage, key: String) -> MenuBadgeSettings {
-        guard let data = defaults.data(forKey: key),
-              let decoded = try? JSONDecoder().decode(MenuBadgeSettings.self, from: data),
-              decoded.version == MenuBadgeSettings.currentVersion else { return .firstLaunch }
+        guard let data = defaults.data(forKey: key) else { return .firstLaunch }
+        guard let decoded = try? JSONDecoder().decode(MenuBadgeSettings.self, from: data),
+              decoded.version == MenuBadgeSettings.currentVersion else {
+            defaults.set(data, forKey: key + ".unreadable")
+            return .firstLaunch
+        }
         return decoded
     }
 

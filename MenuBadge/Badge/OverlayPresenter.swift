@@ -35,11 +35,11 @@ final class OverlayPresenter {
         let badgeAX = BadgeGeometry.badgeRectAX(iconAX: iconAX, corner: a.corner, badgeSize: size)
         let badge = BadgeGeometry.axToCocoa(badgeAX, primaryScreenMaxY: primary.frame.maxY)
         // Room for the 2.2x ripple ring, the 5 pt bounce and the 3.5 pt shake without clipping.
-        let pad = (a.size * 0.6).rounded(.up) + 6
-        let frame = badge.insetBy(dx: -pad, dy: -pad)
+        let pad = BadgeGeometry.overlayPadding(badgeSize: size)
+        let frame = badge.insetBy(dx: -pad.width, dy: -pad.height)
         if panel.frame != frame { panel.setFrame(frame, display: false) }
         let screen = NSScreen.screens.first { $0.frame.intersects(frame) } ?? primary
-        let local = CGRect(x: pad, y: pad, width: size.width, height: size.height)
+        let local = CGRect(x: pad.width, y: pad.height, width: size.width, height: size.height)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)

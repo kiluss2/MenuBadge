@@ -33,6 +33,19 @@ public struct AppEntry: Codable, Equatable, Identifiable, Sendable {
         self.id = id
         self.displayName = displayName
     }
+
+    /// Only the bundle id is required; any other field that is missing or unknown keeps its default.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        displayName = c.lenient(String.self, .displayName) ?? id
+        enabled = c.lenient(Bool.self, .enabled) ?? true
+        placement = c.lenient(Placement.self, .placement) ?? .auto
+        ownItemVisibility = c.lenient(OwnItemVisibility.self, .ownItemVisibility) ?? .always
+        overrides = c.lenient(AppearanceOverrides.self, .overrides) ?? AppearanceOverrides()
+        lastSeenHadOwnIcon = c.lenient(Bool.self, .lastSeenHadOwnIcon)
+        badgeSeen = c.lenient(Bool.self, .badgeSeen) ?? false
+    }
 }
 
 public struct MenuBadgeSettings: Codable, Equatable, Sendable {
@@ -46,6 +59,18 @@ public struct MenuBadgeSettings: Codable, Equatable, Sendable {
     public var paused = false
 
     public init(apps: [AppEntry]) { self.apps = apps }
+
+    /// Settings written by an older or newer MenuBadge keep every value this one understands: a
+    /// missing or unknown field keeps its default, and an unreadable app entry is skipped.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = c.lenient(Int.self, .version) ?? Self.currentVersion
+        defaults = c.lenient(BadgeAppearance.self, .defaults) ?? .standard
+        apps = try c.decode([Lenient<AppEntry>].self, forKey: .apps).compactMap(\.value)
+        showMenuBarIcon = c.lenient(Bool.self, .showMenuBarIcon) ?? true
+        openAtLogin = c.lenient(Bool.self, .openAtLogin) ?? true
+        paused = c.lenient(Bool.self, .paused) ?? false
+    }
 
     /// Slack on, with today's look, so moving from slack-menubar-badge changes nothing visible.
     public static let firstLaunch = MenuBadgeSettings(
