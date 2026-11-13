@@ -35,10 +35,11 @@ enum BadgeAnimations {
         layer.add(group, forKey: "idle")
     }
 
-    /// A hop of `height` points with a small second hop (layer y points up).
+    /// A hop of `height` points up the screen with a small second hop.
     static func bounce(_ layer: CALayer, height: Double, key: String = "idle") {
+        let up = height * upDirection(of: layer)
         let hop = CAKeyframeAnimation(keyPath: "transform.translation.y")
-        hop.values = [0, height, 0, height * 0.3, 0]
+        hop.values = [0, up, 0, up * 0.3, 0]
         hop.keyTimes = [0, 0.35, 0.65, 0.82, 1]
         hop.timingFunctions = [.init(name: .easeOut), .init(name: .easeIn), .init(name: .easeOut), .init(name: .easeIn)]
         hop.isAdditive = true
@@ -77,6 +78,19 @@ enum BadgeAnimations {
         case .bounce: bounce(layer, height: 5, key: "new")
         case .none: break
         }
+    }
+
+    /// +1 when a positive y translation moves `layer` up the screen, -1 when a flipped ancestor
+    /// (the status item button's layer is flipped, the overlay and preview views are not) turns
+    /// its y axis downwards.
+    static func upDirection(of layer: CALayer) -> Double {
+        var flipped = false
+        var ancestor = layer.superlayer
+        while let current = ancestor {
+            if current.isGeometryFlipped { flipped.toggle() }
+            ancestor = current.superlayer
+        }
+        return flipped ? -1 : 1
     }
 
     /// Fits the (invisible until animated) ripple ring around a badge frame.
