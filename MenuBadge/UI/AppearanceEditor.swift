@@ -31,6 +31,17 @@ struct AppearanceEditor: View {
                 }
                 .labelsHidden()
             }
+            AppearanceRow(title: "App icon size", field: .iconSize, overrides: overrides, reset: reset) {
+                Slider(value: $appearance.iconSize, in: BadgeAppearance.iconSizeRange, step: 1) {
+                    Text("App icon size")
+                } minimumValueLabel: {
+                    Text("\(Int(BadgeAppearance.iconSizeRange.lowerBound))")
+                } maximumValueLabel: {
+                    Text("\(Int(BadgeAppearance.iconSizeRange.upperBound))")
+                }
+                .labelsHidden()
+                .help("The app's icon on a MenuBadge item; an app's own menu bar icon keeps its size")
+            }
             AppearanceRow(title: "Number colour", field: .countColor, overrides: overrides, reset: reset) {
                 ColorPicker("Number colour", selection: $appearance.countSwatch, supportsOpacity: false)
                     .labelsHidden()

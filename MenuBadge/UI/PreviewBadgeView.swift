@@ -78,12 +78,15 @@ final class PreviewBadgeView: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for (i, sample) in samples.enumerated() {
-            // A 34x24 "menu bar item" in top-down coordinates, like the real ones.
-            let item = CGRect(x: 24 + CGFloat(i) * 60, y: (bounds.height - 24) / 2, width: 34, height: 24)
+            // A MenuBadge item, 24 pt tall like the real ones, in top-down coordinates.
             let size = BadgeRenderer.badgeSize(sample.label, a)
-            var rect = BadgeGeometry.badgeRectAX(iconAX: item, corner: a.corner, badgeSize: size)
+            let width = BadgeGeometry.ownItemLength(size: a.size, badgeWidth: size.width, iconSize: a.iconSize)
+            let item = CGRect(x: 24 + CGFloat(i) * 60, y: (bounds.height - 24) / 2, width: width, height: 24)
+            let icon = a.iconSize
+            var rect = BadgeGeometry.clamped(
+                BadgeGeometry.badgeRectAX(iconAX: item, corner: a.corner, badgeSize: size, glyphSize: icon), to: item)
             rect.origin.y = bounds.height - rect.maxY
-            let iconRect = CGRect(x: item.midX - 8, y: bounds.height - item.midY - 8, width: 16, height: 16)
+            let iconRect = CGRect(x: item.midX - icon / 2, y: bounds.height - item.midY - icon / 2, width: icon, height: icon)
             sample.icon.frame = iconRect
             sample.badge.frame = rect
             sample.badge.contentsScale = scale

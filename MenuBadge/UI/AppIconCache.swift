@@ -29,13 +29,12 @@ enum AppIconCache {
         return small
     }
 
-    /// The icon for the menu bar, with the transparent margin app icons are drawn with (about a
-    /// fifth of the canvas) cut off, so the artwork is 16 pt like other menu bar icons (Slack's own
-    /// is 16 pt) instead of 13.
-    static func menuBarIcon(for bundleID: String) -> NSImage {
-        if let icon = menuBarIcons[bundleID] { return icon }
+    /// The icon for the menu bar, `side` points tall, with the transparent margin app icons are
+    /// drawn with (about a fifth of the canvas) cut off, so the artwork really is `side` points.
+    static func menuBarIcon(for bundleID: String, side: Double) -> NSImage {
+        let key = "\(bundleID)@\(side)"
+        if let icon = menuBarIcons[key] { return icon }
         let source = icon(for: bundleID)
-        let side = BadgeGeometry.ownItemIconSize
         var proposed = CGRect(x: 0, y: 0, width: 128, height: 128)
         let icon: NSImage
         if let image = source.cgImage(forProposedRect: &proposed, context: nil, hints: nil),
@@ -49,7 +48,7 @@ enum AppIconCache {
                 return true
             }
         }
-        menuBarIcons[bundleID] = icon
+        menuBarIcons[key] = icon
         return icon
     }
 }

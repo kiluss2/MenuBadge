@@ -137,7 +137,7 @@ final class BadgeEngine {
             overlays[id]?.hide()
             let item = ownItems[id] ?? OwnItemPresenter(bundleID: id)
             ownItems[id] = item
-            item.show(showBadge ? label : nil, appearance, appIcon: AppIconCache.menuBarIcon(for: id))
+            item.show(showBadge ? label : nil, appearance, appIcon: AppIconCache.menuBarIcon(for: id, side: appearance.iconSize))
             if grew && showBadge { item.playNew(appearance.onNew) }
         }
     }

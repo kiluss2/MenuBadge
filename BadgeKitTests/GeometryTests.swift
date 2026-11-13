@@ -54,3 +54,16 @@ let slackIcon = CGRect(x: 3170, y: 3, width: 34, height: 24)
     // Image coordinates (as CGImage.cropping uses) start at the top row.
     #expect(ImageTrim.opaqueBounds(of: try #require(ctx.makeImage())) == CGRect(x: 2, y: 7, width: 6, height: 3))
 }
+
+@Test func biggerIconMovesTheBadgeToItsCorner() {
+    let item = CGRect(x: 0, y: 0, width: 40, height: 24) // centre (20, 12)
+    // 16 pt keeps today's offsets; a 20 pt icon pushes the corner out by the same proportion.
+    #expect(BadgeGeometry.anchor(iconAX: item, corner: .bottomRight, glyphSize: 16) == CGPoint(x: 28, y: 18))
+    #expect(BadgeGeometry.anchor(iconAX: item, corner: .bottomRight, glyphSize: 20) == CGPoint(x: 30, y: 19.5))
+    #expect(BadgeGeometry.anchor(iconAX: item, corner: .topLeft, glyphSize: 20) == CGPoint(x: 10, y: 3.25))
+}
+
+@Test func ownItemMakesRoomForTheIconSize() {
+    #expect(BadgeGeometry.ownItemLength(size: 12, badgeWidth: 12, iconSize: 20) == 36)
+    #expect(BadgeGeometry.ownItemLength(size: 12, badgeWidth: 12, iconSize: 22) == 38)
+}

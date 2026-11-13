@@ -133,10 +133,29 @@ private final class MemoryDefaults: SettingsStorage {
     #expect(!o.isSet(.corner) && o.isSet(.countColor))
     for field in AppearanceField.allCases {
         var all = AppearanceOverrides(diff: .init(corner: .topLeft, size: 9, countColor: .white, dotColor: .white,
-                                                  textColor: .mentionRed, idle: .none, onNew: .none),
+                                                  textColor: .mentionRed, idle: .none, onNew: .none, iconSize: 17),
                                       from: .standard)
         #expect(all.isSet(field))
         all.clear(field)
         #expect(!all.isSet(field))
     }
+}
+
+@Test func iconSizeDefaultsTo20AndStaysInRange() {
+    #expect(BadgeAppearance.standard.iconSize == 20)
+    #expect(BadgeAppearance.iconSizeRange == 16...22)
+    var o = AppearanceOverrides()
+    o.iconSize = 30
+    #expect(o.resolved(over: .standard).iconSize == 22)
+    #expect(o.isSet(.iconSize))
+    o.clear(.iconSize)
+    #expect(o.resolved(over: .standard).iconSize == 20)
+}
+
+@MainActor @Test func settingsWithoutIconSizeGetTheDefault() {
+    let d = MemoryDefaults()
+    let json = #"{"version":1,"defaults":{"size":14},"apps":[{"id":"a.b","displayName":"AB","overrides":{"size":10}}]}"#
+    d.set(Data(json.utf8), forKey: "MenuBadge.settings.v1")
+    let s = SettingsStore(defaults: d).settings
+    #expect(s.defaults.iconSize == 20 && s.apps[0].overrides.iconSize == nil)
 }

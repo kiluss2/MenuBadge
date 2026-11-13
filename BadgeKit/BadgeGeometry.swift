@@ -2,18 +2,15 @@ import CoreGraphics
 
 /// Badge size and position. Icon rects are in AX coordinates (top-left origin, y down).
 public enum BadgeGeometry {
-    /// The glyph inside a menu bar item is assumed ~16 pt wide, centred in the item.
-    static let glyphHalfWidth: CGFloat = 8
-    /// Vertical offsets of the glyph's top and bottom edges from the item's centre.
-    static let glyphTop: CGFloat = -7
-    static let glyphBottom: CGFloat = 6
-
-    /// The glyph corner the badge is centred on.
-    public static func anchor(iconAX: CGRect, corner: Corner) -> CGPoint {
+    /// The glyph corner the badge is centred on. The glyph is centred in the item and
+    /// `glyphSize` wide (an app's own menu bar glyph is ~16 pt); the corner sits 7/16 of the size
+    /// above the centre and 6/16 below it, matching Slack's glyph at 16 pt.
+    public static func anchor(iconAX: CGRect, corner: Corner, glyphSize: CGFloat = 16) -> CGPoint {
         let left = corner == .topLeft || corner == .bottomLeft
         let top = corner == .topLeft || corner == .topRight
-        return CGPoint(x: iconAX.midX + (left ? -glyphHalfWidth : glyphHalfWidth),
-                       y: iconAX.midY + (top ? glyphTop : glyphBottom))
+        let half = glyphSize / 2
+        return CGPoint(x: iconAX.midX + (left ? -half : half),
+                       y: iconAX.midY + (top ? -glyphSize * 7 / 16 : glyphSize * 6 / 16))
     }
 
     /// Bold digits at three quarters of the badge height (12 pt badge → 9 pt text).
@@ -28,8 +25,9 @@ public enum BadgeGeometry {
     }
 
     /// The badge rect, centred on the corner's anchor (a wider pill grows to both sides).
-    public static func badgeRectAX(iconAX: CGRect, corner: Corner, badgeSize: CGSize) -> CGRect {
-        let a = anchor(iconAX: iconAX, corner: corner)
+    public static func badgeRectAX(iconAX: CGRect, corner: Corner, badgeSize: CGSize,
+                                   glyphSize: CGFloat = 16) -> CGRect {
+        let a = anchor(iconAX: iconAX, corner: corner, glyphSize: glyphSize)
         return CGRect(x: a.x - badgeSize.width / 2, y: a.y - badgeSize.height / 2,
                       width: badgeSize.width, height: badgeSize.height)
     }
@@ -48,13 +46,10 @@ public enum BadgeGeometry {
         CGRect(x: r.minX, y: primaryScreenMaxY - r.maxY, width: r.width, height: r.height)
     }
 
-    /// Width of the icon MenuBadge draws in its own item for an app.
-    public static let ownItemIconSize: Double = 16
-
     /// MenuBadge's own item: room for the icon plus a badge on its corner; wider only when a pill
     /// ("999+" at a large size) would not fit, so the item keeps its width as counts change.
-    public static func ownItemLength(size: Double, badgeWidth: Double) -> Double {
-        max(ownItemIconSize + size + 4, badgeWidth + 4)
+    public static func ownItemLength(size: Double, badgeWidth: Double, iconSize: Double = 16) -> Double {
+        max(iconSize + size + 4, badgeWidth + 4)
     }
 
     /// Room around a badge in the overlay panel for the 2.2x ripple ring (0.6 of the badge on each

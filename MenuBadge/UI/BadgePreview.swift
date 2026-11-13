@@ -29,7 +29,8 @@ struct BadgePreview: NSViewRepresentable {
     }
 
     private var icon: NSImage {
-        if let bundleID { return AppIconCache.menuBarIcon(for: bundleID) }
+        // Drawn at the largest icon size and scaled down by the preview, so every size is sharp.
+        if let bundleID { return AppIconCache.menuBarIcon(for: bundleID, side: BadgeAppearance.iconSizeRange.upperBound) }
         let symbol = NSImage(systemSymbolName: "app", accessibilityDescription: nil) ?? NSImage()
         let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
             .applying(.init(paletteColors: [.white]))

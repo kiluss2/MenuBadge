@@ -37,14 +37,18 @@ public struct BadgeAppearance: Codable, Equatable, Hashable, Sendable {
     public var textColor: RGBA
     public var idle: IdleAnimation
     public var onNew: NewBadgeEffect
+    /// Height of the app icon on MenuBadge's own item (not used on the app's own icon).
+    public var iconSize: Double
 
     public init(corner: Corner, size: Double, countColor: RGBA, dotColor: RGBA, textColor: RGBA,
-                idle: IdleAnimation, onNew: NewBadgeEffect) {
+                idle: IdleAnimation, onNew: NewBadgeEffect, iconSize: Double = 20) {
         self.corner = corner; self.size = size; self.countColor = countColor; self.dotColor = dotColor
-        self.textColor = textColor; self.idle = idle; self.onNew = onNew
+        self.textColor = textColor; self.idle = idle; self.onNew = onNew; self.iconSize = iconSize
     }
 
     public static let sizeRange: ClosedRange<Double> = 8...16
+    /// A menu bar item is 24 pt tall; 22 pt leaves a point above and below the icon.
+    public static let iconSizeRange: ClosedRange<Double> = 16...22
 
     /// A missing or unknown field takes the standard look's value.
     public init(from decoder: Decoder) throws {
@@ -57,6 +61,7 @@ public struct BadgeAppearance: Codable, Equatable, Hashable, Sendable {
         textColor = c.lenient(RGBA.self, .textColor) ?? s.textColor
         idle = c.lenient(IdleAnimation.self, .idle) ?? s.idle
         onNew = c.lenient(NewBadgeEffect.self, .onNew) ?? s.onNew
+        iconSize = c.lenient(Double.self, .iconSize) ?? s.iconSize
     }
 
     /// The look slack-menubar-badge shipped with.
@@ -74,6 +79,7 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
     public var textColor: RGBA?
     public var idle: IdleAnimation?
     public var onNew: NewBadgeEffect?
+    public var iconSize: Double?
 
     public init() {}
 
@@ -87,6 +93,7 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
         textColor = c.lenient(RGBA.self, .textColor)
         idle = c.lenient(IdleAnimation.self, .idle)
         onNew = c.lenient(NewBadgeEffect.self, .onNew)
+        iconSize = c.lenient(Double.self, .iconSize)
     }
 
     /// Overrides for the fields of `look` that differ from `base`; equal fields follow the default.
@@ -98,12 +105,14 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
         textColor = look.textColor == base.textColor ? nil : look.textColor
         idle = look.idle == base.idle ? nil : look.idle
         onNew = look.onNew == base.onNew ? nil : look.onNew
+        iconSize = look.iconSize == base.iconSize ? nil : look.iconSize
     }
 
     public var isEmpty: Bool { self == AppearanceOverrides() }
 
     public func resolved(over base: BadgeAppearance) -> BadgeAppearance {
         let range = BadgeAppearance.sizeRange
+        let iconRange = BadgeAppearance.iconSizeRange
         return BadgeAppearance(
             corner: corner ?? base.corner,
             size: min(max(size ?? base.size, range.lowerBound), range.upperBound),
@@ -111,13 +120,14 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
             dotColor: dotColor ?? base.dotColor,
             textColor: textColor ?? base.textColor,
             idle: idle ?? base.idle,
-            onNew: onNew ?? base.onNew)
+            onNew: onNew ?? base.onNew,
+            iconSize: min(max(iconSize ?? base.iconSize, iconRange.lowerBound), iconRange.upperBound))
     }
 }
 
 /// One editable field of a badge's look.
 public enum AppearanceField: CaseIterable, Sendable {
-    case corner, size, countColor, dotColor, textColor, idle, onNew
+    case corner, size, countColor, dotColor, textColor, idle, onNew, iconSize
 }
 
 extension AppearanceOverrides {
@@ -131,6 +141,7 @@ extension AppearanceOverrides {
         case .textColor: textColor != nil
         case .idle: idle != nil
         case .onNew: onNew != nil
+        case .iconSize: iconSize != nil
         }
     }
 
@@ -144,6 +155,7 @@ extension AppearanceOverrides {
         case .textColor: textColor = nil
         case .idle: idle = nil
         case .onNew: onNew = nil
+        case .iconSize: iconSize = nil
         }
     }
 }

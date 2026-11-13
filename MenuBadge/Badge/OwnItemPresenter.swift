@@ -26,7 +26,8 @@ final class OwnItemPresenter: NSObject {
         let item = self.item ?? makeItem()
         let badgeSize = label.map { BadgeRenderer.badgeSize($0, a) }
         // Wide enough that a badge on the 16 pt icon's corner is not cut off by the item.
-        let length = BadgeGeometry.ownItemLength(size: a.size, badgeWidth: badgeSize.map { Double($0.width) } ?? 0)
+        let length = BadgeGeometry.ownItemLength(size: a.size, badgeWidth: badgeSize.map { Double($0.width) } ?? 0,
+                                                 iconSize: a.iconSize)
         if item.length != length { item.length = length }
         guard let button = item.button else { return }
         if button.image !== appIcon { button.image = appIcon }
@@ -40,7 +41,8 @@ final class OwnItemPresenter: NSObject {
         let bounds = button.bounds
         // Geometry works top-down like AX; flip when the button's layer is bottom-up.
         var rect = BadgeGeometry.clamped(
-            BadgeGeometry.badgeRectAX(iconAX: CGRect(origin: .zero, size: bounds.size), corner: a.corner, badgeSize: size),
+            BadgeGeometry.badgeRectAX(iconAX: CGRect(origin: .zero, size: bounds.size), corner: a.corner, badgeSize: size,
+                                      glyphSize: a.iconSize),
             to: CGRect(origin: .zero, size: bounds.size))
         if !button.isFlipped { rect.origin.y = bounds.height - rect.maxY }
 

@@ -9,7 +9,8 @@ visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack
   its badge goes on a MenuBadge item; Settings says so. A MenuBadge item shows while its app is
   open (or only with a badge) and goes away when the app quits. ⌘-drag it to move it; the place
   is kept.
-- Per-app look on top of a shared default: corner, size (8–16 pt), number / dot / text colours,
+- Per-app look on top of a shared default: corner, size (8–16 pt), app icon size on a MenuBadge
+  item (16–22 pt, default 20; the item is 24 pt tall), number / dot / text colours,
   animation while shown (Blink, Breathe, Bounce, Ripple, None) and on a new badge (Shake, Bounce,
   None). Each value on an app's page says whether it is set for the app or comes from Default
   Look, and ↺ makes it follow Default Look again. Counts above 999 show as "999+".
