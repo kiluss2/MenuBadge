@@ -41,7 +41,7 @@ public struct BadgeAppearance: Codable, Equatable, Hashable, Sendable {
     public var iconSize: Double
 
     public init(corner: Corner, size: Double, countColor: RGBA, dotColor: RGBA, textColor: RGBA,
-                idle: IdleAnimation, onNew: NewBadgeEffect, iconSize: Double = 20) {
+                idle: IdleAnimation, onNew: NewBadgeEffect, iconSize: Double = 19) {
         self.corner = corner; self.size = size; self.countColor = countColor; self.dotColor = dotColor
         self.textColor = textColor; self.idle = idle; self.onNew = onNew; self.iconSize = iconSize
     }

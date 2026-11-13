@@ -141,15 +141,15 @@ private final class MemoryDefaults: SettingsStorage {
     }
 }
 
-@Test func iconSizeDefaultsTo20AndStaysInRange() {
-    #expect(BadgeAppearance.standard.iconSize == 20)
+@Test func iconSizeDefaultsTo19AndStaysInRange() {
+    #expect(BadgeAppearance.standard.iconSize == 19)
     #expect(BadgeAppearance.iconSizeRange == 16...22)
     var o = AppearanceOverrides()
     o.iconSize = 30
     #expect(o.resolved(over: .standard).iconSize == 22)
     #expect(o.isSet(.iconSize))
     o.clear(.iconSize)
-    #expect(o.resolved(over: .standard).iconSize == 20)
+    #expect(o.resolved(over: .standard).iconSize == 19)
 }
 
 @MainActor @Test func settingsWithoutIconSizeGetTheDefault() {
@@ -157,5 +157,5 @@ private final class MemoryDefaults: SettingsStorage {
     let json = #"{"version":1,"defaults":{"size":14},"apps":[{"id":"a.b","displayName":"AB","overrides":{"size":10}}]}"#
     d.set(Data(json.utf8), forKey: "MenuBadge.settings.v1")
     let s = SettingsStore(defaults: d).settings
-    #expect(s.defaults.iconSize == 20 && s.apps[0].overrides.iconSize == nil)
+    #expect(s.defaults.iconSize == 19 && s.apps[0].overrides.iconSize == nil)
 }
