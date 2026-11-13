@@ -18,16 +18,27 @@ visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack
   animation while shown (Blink, Breathe, Bounce, Ripple, None) and on a new badge (Shake, Bounce,
   None). Each value on an app's page says whether it is set for the app or comes from Default
   Look, and ↺ makes it follow Default Look again. Counts above 999 show as "999+".
+- **Compact mode** (General › Gather badges in one item), for a full menu bar (a MacBook notch, many
+  icons) where macOS hides the items that do not fit: every badge goes on MenuBadge's own icon, up
+  to 3 app icons with their badges and "+N" for the rest; its menu lists each app with its count
+  and opens it. ⌘-drag the icon next to the clock.
+- **Updates:** MenuBadge asks GitHub for the latest release 10 s after launch and then once a day
+  (one anonymous request; turn it off in General). When there is a newer one, General and the menu
+  offer Update, which runs the installer bundled in the app: it downloads that release's DMG,
+  replaces the app and reopens it, keeping the Accessibility permission.
 - Settings: open MenuBadge again (Spotlight, Launchpad, Finder) or use its menu bar icon. Stored
   as JSON in the `MenuBadge.settings.v1` user default; a value this version cannot read keeps its
   default, and settings that cannot be read at all are kept under `MenuBadge.settings.v1.unreadable`.
 - Reads everything through Accessibility (Dock tile `AXStatusLabel`, app `AXExtrasMenuBar`), polled
-  once a second; ~15 MB, ~0.15 % CPU, nothing animates between blinks.
+  once a second (the Dock posts no notification when a badge changes), and not at all while the
+  screens sleep or the screen is locked; ~15 MB, ~0.1 % CPU, nothing animates between blinks.
 
 <p align="center"><img src="docs/images/settings.png" width="560" alt="MenuBadge Settings: an app's placement, live preview and look"></p>
 
 Design and plan: `docs/superpowers/specs/2026-11-13-menubadge-design.md`,
-`docs/superpowers/plans/2026-11-13-menubadge.md`.
+`docs/superpowers/plans/2026-11-13-menubadge.md`; compact mode and updates:
+`docs/superpowers/specs/2026-11-13-compact-and-updates-design.md`,
+`docs/superpowers/plans/2026-11-13-compact-and-updates.md`.
 
 ## Install
 
@@ -96,12 +107,15 @@ rm /tmp/cs.cnf /tmp/cs.key /tmp/cs.pem /tmp/cs.p12
 
 ### Making a release
 
+Raise `MARKETING_VERSION` in `project.yml` first; the tag must be `v` + that version, since the
+update check compares the latest release's tag with the running app's version.
+
 ```bash
 scripts/make-release.sh   # Release build signed with the identity above → dist/MenuBadge.dmg
-gh release create v1.0.0 dist/MenuBadge.dmg --title "MenuBadge 1.0.0" --notes "..."
+gh release create v1.1.0 dist/MenuBadge.dmg --title "MenuBadge 1.1.0" --notes "..."
 ```
 
-The quick install always takes the latest release's `MenuBadge.dmg`.
+The quick install and the in-app Update always take the latest release's `MenuBadge.dmg`.
 
 ## Develop
 
