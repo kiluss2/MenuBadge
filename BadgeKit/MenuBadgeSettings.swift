@@ -59,6 +59,10 @@ public struct MenuBadgeSettings: Codable, Equatable, Sendable {
     public var showMenuBarIcon = true
     public var openAtLogin = true
     public var paused = false
+    /// Every badge in MenuBadge's own item instead of per-app placement (for a full menu bar).
+    public var compact = false
+    /// Look for a newer GitHub release once a day.
+    public var checkForUpdates = true
 
     public init(apps: [AppEntry]) { self.apps = apps }
 
@@ -72,6 +76,8 @@ public struct MenuBadgeSettings: Codable, Equatable, Sendable {
         showMenuBarIcon = c.lenient(Bool.self, .showMenuBarIcon) ?? true
         openAtLogin = c.lenient(Bool.self, .openAtLogin) ?? true
         paused = c.lenient(Bool.self, .paused) ?? false
+        compact = c.lenient(Bool.self, .compact) ?? false
+        checkForUpdates = c.lenient(Bool.self, .checkForUpdates) ?? true
     }
 
     /// Slack on, with today's look, so moving from slack-menubar-badge changes nothing visible.

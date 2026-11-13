@@ -159,3 +159,18 @@ private final class MemoryDefaults: SettingsStorage {
     let s = SettingsStore(defaults: d).settings
     #expect(s.defaults.iconSize == 19 && s.apps[0].overrides.iconSize == nil)
 }
+
+@Test func newFieldsDefaultWhenMissing() throws {
+    let s = try JSONDecoder().decode(MenuBadgeSettings.self, from: Data(#"{"apps":[]}"#.utf8))
+    #expect(s.compact == false && s.checkForUpdates == true)
+}
+
+@Test func newFieldsRoundTrip() throws {
+    var s = MenuBadgeSettings(apps: [])
+    s.compact = true
+    s.checkForUpdates = false
+    let back = try JSONDecoder().decode(MenuBadgeSettings.self, from: JSONEncoder().encode(s))
+    #expect(back.compact == true && back.checkForUpdates == false)
+    let wrong = try JSONDecoder().decode(MenuBadgeSettings.self, from: Data(#"{"apps":[],"compact":"yes"}"#.utf8))
+    #expect(wrong.compact == false)
+}
