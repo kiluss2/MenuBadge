@@ -10,6 +10,12 @@ final class OwnItemPresenter: NSObject {
     private let badgeLayer = CALayer()
     private let ring = CAShapeLayer()
     private lazy var idle = IdleAnimator(badge: badgeLayer, ring: ring)
+    /// What the badge layer shows, to redraw the button only when that changes.
+    private struct Shown: Equatable {
+        let label: BadgeLabel?
+        let look: BadgeAppearance
+    }
+    private var shown: Shown?
 
     init(bundleID: String) {
         self.bundleID = bundleID
@@ -24,6 +30,7 @@ final class OwnItemPresenter: NSObject {
         if item.length != length { item.length = length }
         guard let button = item.button else { return }
         if button.image !== appIcon { button.image = appIcon }
+        defer { redrawCopiesOnOtherDisplays(button, Shown(label: label, look: a)) }
 
         guard let label, let size = badgeSize, let host = button.layer else {
             badgeLayer.isHidden = true
@@ -60,6 +67,16 @@ final class OwnItemPresenter: NSObject {
         ring.removeFromSuperlayer()
         if let item { NSStatusBar.system.removeStatusItem(item) }
         item = nil
+        shown = nil
+    }
+
+    /// The menu bar of every display but the active one shows a copy of this item, and the copy
+    /// is only redrawn when the button draws, not when the badge layer on top of it changes; so
+    /// the button is redrawn whenever the badge changes. The copies stay still (no animation).
+    private func redrawCopiesOnOtherDisplays(_ button: NSStatusBarButton, _ now: Shown) {
+        guard now != shown else { return }
+        shown = now
+        button.needsDisplay = true
     }
 
     func playNew(_ effect: NewBadgeEffect) {
