@@ -64,6 +64,17 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
 
     public init() {}
 
+    /// Overrides for the fields of `look` that differ from `base`; equal fields follow the default.
+    public init(diff look: BadgeAppearance, from base: BadgeAppearance) {
+        corner = look.corner == base.corner ? nil : look.corner
+        size = look.size == base.size ? nil : look.size
+        countColor = look.countColor == base.countColor ? nil : look.countColor
+        dotColor = look.dotColor == base.dotColor ? nil : look.dotColor
+        textColor = look.textColor == base.textColor ? nil : look.textColor
+        idle = look.idle == base.idle ? nil : look.idle
+        onNew = look.onNew == base.onNew ? nil : look.onNew
+    }
+
     public var isEmpty: Bool { self == AppearanceOverrides() }
 
     public func resolved(over base: BadgeAppearance) -> BadgeAppearance {

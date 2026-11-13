@@ -8,6 +8,8 @@ import Observation
 final class BadgeEngine {
     /// Whether MenuBadge has Accessibility permission (shown in Settings).
     private(set) var trusted = false
+    /// Per app: running or not, and where its badge currently goes.
+    private(set) var runtime: [String: AppRuntime] = [:]
 
     @ObservationIgnored let store: SettingsStore
     @ObservationIgnored private let dock = DockBadgeReader()
@@ -94,6 +96,13 @@ final class BadgeEngine {
             placement: current.placement, visibility: current.ownItemVisibility, isRunning: app != nil,
             iconAX: iconAX, iconOnScreen: iconOnScreen, lastSeenHadOwnIcon: current.lastSeenHadOwnIcon,
             hasBadge: label != nil))
+        let location: AppRuntime.Location = switch decision {
+        case .none: .hidden
+        case .overlay: .appIcon
+        case .ownItem: .ownItem
+        }
+        let status = AppRuntime(isRunning: app != nil, location: location)
+        if runtime[id] != status { runtime[id] = status }
         let grew = label.map { isNewBadge(old: lastLabels[id], new: $0) } ?? false
         lastLabels[id] = label
 

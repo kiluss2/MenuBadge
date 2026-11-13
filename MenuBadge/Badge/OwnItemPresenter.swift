@@ -31,8 +31,9 @@ final class OwnItemPresenter: NSObject {
         let size = BadgeRenderer.badgeSize(label, a)
         let bounds = button.bounds
         // Geometry works top-down like AX; flip when the button's layer is bottom-up.
-        var rect = BadgeGeometry.badgeRectAX(iconAX: CGRect(origin: .zero, size: bounds.size),
-                                             corner: a.corner, badgeSize: size)
+        var rect = BadgeGeometry.clamped(
+            BadgeGeometry.badgeRectAX(iconAX: CGRect(origin: .zero, size: bounds.size), corner: a.corner, badgeSize: size),
+            to: CGRect(origin: .zero, size: bounds.size))
         if !button.isFlipped { rect.origin.y = bounds.height - rect.maxY }
 
         CATransaction.begin()

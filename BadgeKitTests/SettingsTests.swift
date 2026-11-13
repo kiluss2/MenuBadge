@@ -51,3 +51,35 @@ import BadgeKit
     d.set(try JSONEncoder().encode(future), forKey: "MenuBadge.settings.v1")
     #expect(SettingsStore(defaults: d).settings == .firstLaunch)
 }
+
+@Test func overridesFromDiffKeepOnlyChangedFields() {
+    var look = BadgeAppearance.standard
+    look.corner = .topLeft
+    look.idle = .ripple
+    let o = AppearanceOverrides(diff: look, from: .standard)
+    #expect(o.corner == .topLeft && o.idle == .ripple)
+    #expect(o.size == nil && o.countColor == nil && o.onNew == nil)
+    #expect(AppearanceOverrides(diff: .standard, from: .standard).isEmpty)
+}
+
+@MainActor @Test func editingAnAppsLookStoresOnlyDifferences() {
+    let d = UserDefaults(suiteName: "MenuBadgeTests.\(UUID())")!
+    let store = SettingsStore(defaults: d)
+    let slack = "com.tinyspeck.slackmacgap"
+    store[appearanceOf: slack].size = 14
+    #expect(store.settings.apps[0].overrides.size == 14)
+    #expect(store.settings.apps[0].overrides.corner == nil)
+    store.settings.defaults.corner = .topRight     // not overridden: follows the new default
+    #expect(store[appearanceOf: slack].corner == .topRight && store[appearanceOf: slack].size == 14)
+    store[entry: slack]?.placement = .ownItem
+    #expect(SettingsStore(defaults: d).settings.apps[0].placement == .ownItem)
+}
+
+@MainActor @Test func appSubscriptEditsListedAppsAndIgnoresUnknownOnes() {
+    let d = UserDefaults(suiteName: "MenuBadgeTests.\(UUID())")!
+    let store = SettingsStore(defaults: d)
+    store[app: "com.tinyspeck.slackmacgap"].enabled = false
+    #expect(store.settings.apps[0].enabled == false)
+    store[app: "not.listed"].enabled = false
+    #expect(store.settings.apps.map(\.id) == ["com.tinyspeck.slackmacgap"])
+}

@@ -1,11 +1,14 @@
 import AppKit
 import ApplicationServices
 import BadgeKit
+import Observation
 
-@main
+@main @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var store: SettingsStore!
     private var engine: BadgeEngine!
+    private var settingsWindow: SettingsWindowController!
+    private var menuBarItem: MenuBarItem!
 
     static func main() {
         let app = NSApplication.shared
@@ -18,15 +21,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         store = SettingsStore()
         engine = BadgeEngine(store: store)
+        settingsWindow = SettingsWindowController(store: store, engine: engine)
+        menuBarItem = MenuBarItem(store: store) { [weak self] in self?.settingsWindow.show() }
+        applySettings()
+        observeSettings()
+        engine.start()
+
+        // MENUBADGE_DEMO=<bundle id> (1 = Slack): run the demo on that app's badge, then quit.
+        if let demo = ProcessInfo.processInfo.environment["MENUBADGE_DEMO"] {
+            engine.runDemo(bundleID: demo == "1" ? "com.tinyspeck.slackmacgap" : demo, quitWhenDone: true)
+            return
+        }
         if !AXIsProcessTrusted() {
             // "AXTrustedCheckOptionPrompt" is the value of kAXTrustedCheckOptionPrompt, a C global
             // that Swift 6 refuses to read as non-concurrency-safe.
             _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
+            settingsWindow.show(selecting: .general)
         }
-        engine.start()
-        // MENUBADGE_DEMO=<bundle id> (1 = Slack): run the demo on that app's badge, then quit.
-        if let demo = ProcessInfo.processInfo.environment["MENUBADGE_DEMO"] {
-            engine.runDemo(bundleID: demo == "1" ? "com.tinyspeck.slackmacgap" : demo, quitWhenDone: true)
+    }
+
+    /// Opening MenuBadge again (Spotlight, Launchpad, Finder) opens Settings.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        settingsWindow.show()
+        return true
+    }
+
+    private func applySettings() {
+        menuBarItem.sync()
+        LoginItem.apply(store.settings.openAtLogin)
+    }
+
+    /// Re-applies the menu bar icon and login item whenever those settings change.
+    private func observeSettings() {
+        withObservationTracking {
+            _ = store.settings.showMenuBarIcon
+            _ = store.settings.openAtLogin
+        } onChange: { [weak self] in
+            Task { @MainActor in
+                self?.applySettings()
+                self?.observeSettings()
+            }
         }
     }
 }

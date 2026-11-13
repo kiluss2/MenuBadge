@@ -34,6 +34,15 @@ public enum BadgeGeometry {
                       width: badgeSize.width, height: badgeSize.height)
     }
 
+    /// Moves `rect` the least distance needed to lie inside `bounds` (a badge on MenuBadge's own
+    /// item must not be cut off by the item's edges).
+    public static func clamped(_ rect: CGRect, to bounds: CGRect) -> CGRect {
+        var r = rect
+        r.origin.x = min(max(r.minX, bounds.minX), bounds.maxX - r.width)
+        r.origin.y = min(max(r.minY, bounds.minY), bounds.maxY - r.height)
+        return r
+    }
+
     /// AX (top-left origin) to Cocoa screen coordinates (bottom-left origin of the primary screen).
     public static func axToCocoa(_ r: CGRect, primaryScreenMaxY: Double) -> CGRect {
         CGRect(x: r.minX, y: primaryScreenMaxY - r.maxY, width: r.width, height: r.height)

@@ -21,3 +21,13 @@ let slackIcon = CGRect(x: 3170, y: 3, width: 34, height: 24)
     #expect(BadgeGeometry.fontSize(for: 12) == 9)
     #expect(BadgeGeometry.axToCocoa(CGRect(x: 0, y: 3, width: 34, height: 24), primaryScreenMaxY: 1080).minY == 1053)
 }
+
+@Test func clampingKeepsTheBadgeInsideItsItem() {
+    let bounds = CGRect(x: 0, y: 0, width: 32, height: 22)
+    #expect(BadgeGeometry.clamped(CGRect(x: 2, y: -2, width: 12, height: 12), to: bounds)
+            == CGRect(x: 2, y: 0, width: 12, height: 12))
+    #expect(BadgeGeometry.clamped(CGRect(x: 26, y: 14, width: 12, height: 12), to: bounds)
+            == CGRect(x: 20, y: 10, width: 12, height: 12))
+    #expect(BadgeGeometry.clamped(CGRect(x: 4, y: 4, width: 12, height: 12), to: bounds)
+            == CGRect(x: 4, y: 4, width: 12, height: 12))
+}
