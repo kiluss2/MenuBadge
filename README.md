@@ -1,5 +1,7 @@
 # MenuBadge
 
+![MenuBadge: Slack, Telegram and Mail badges on the menu bar](docs/images/menubar.png)
+
 Menu bar app that mirrors apps' **Dock badges** (unread counts) onto the menu bar, so they stay
 visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack only).
 
@@ -19,6 +21,8 @@ visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack
   default, and settings that cannot be read at all are kept under `MenuBadge.settings.v1.unreadable`.
 - Reads everything through Accessibility (Dock tile `AXStatusLabel`, app `AXExtrasMenuBar`), polled
   once a second; ~15 MB, ~0.15 % CPU, nothing animates between blinks.
+
+<p align="center"><img src="docs/images/settings.png" width="560" alt="MenuBadge Settings: an app's placement, live preview and look"></p>
 
 Design and plan: `docs/superpowers/specs/2026-11-13-menubadge-design.md`,
 `docs/superpowers/plans/2026-11-13-menubadge.md`.
@@ -105,6 +109,8 @@ open MenuBadge.xcodeproj
 - `BadgeKit/` – pure logic with unit tests (labels, settings, geometry, placement, curves, status
   text).
 - `MenuBadge/` – AppKit/AX/SwiftUI app (readers, overlay, own items, engine, Settings).
+- `swift scripts/make-readme-images.swift` redraws `docs/images/menubar.png`; `settings.png` is a
+  screenshot of the Settings window.
 - `MENUBADGE_DEMO=<bundle id>` (`1` = Slack) runs every badge state on that app, then quits;
   "Preview All States" in an app's Settings does the same without quitting.
 - `swift scripts/make-appicon.swift` redraws the app icon.
