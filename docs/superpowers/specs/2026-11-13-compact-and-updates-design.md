@@ -116,6 +116,20 @@ the network. A downloaded DMG via curl carries no quarantine flag, as today.
 **Release flow.** Bump `MARKETING_VERSION` in `project.yml` for each release (1.1.0 for this
 work); `make-release.sh` unchanged. README: mention the daily check and how to turn it off.
 
+## Design: lighter polling
+
+Measured on 2026-11-13 (Mac mini, Slack + Telegram on): MenuBadge used 0.05 s CPU per minute
+(~0.08 %), the Dock 0.02 s per minute in total, ~15 MB at launch (46 MB after the Settings window
+had been open). A second event source was also probed: LaunchServices keeps a `StatusLabel` per
+app but `lsappinfo listen +all` posts nothing when it changes. Two cheap savings remain:
+
+- **Sleep with the screen.** Stop the 1 s timer on `NSWorkspace.screensDidSleepNotification` and
+  `NSWorkspace.sessionDidResignActiveNotification` (fast user switch) and on screen lock
+  (`com.apple.screenIsLocked` distributed notification); restart it, with an immediate tick, on the
+  matching wake / unlock / `sessionDidBecomeActive` notifications. Nothing is visible meanwhile.
+- **No icon lookups in compact mode.** The engine skips `MenuExtraReader` (the AX call into each
+  app for its menu bar icon) and `IconPresence` while compact is on; only Dock labels are read.
+
 ## Constraints
 
 - Swift 6, macOS target as today, no new dependencies; XcodeGen project.
