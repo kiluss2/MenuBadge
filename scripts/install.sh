@@ -20,10 +20,13 @@ if ! security find-identity -p codesigning | grep "\"$IDENTITY\"" >/dev/null; th
   SIGN=(CODE_SIGN_IDENTITY=-)
 fi
 
+# Built under ~/Library/Caches, which Spotlight does not index, so only the installed copy shows
+# up when searching for MenuBadge (a copy in Xcode's DerivedData would be listed too).
+DERIVED="$HOME/Library/Caches/MenuBadge/DerivedData"
 xcodegen generate --quiet
-xcodebuild -project MenuBadge.xcodeproj -scheme MenuBadge -configuration Release -quiet build ${SIGN[@]+"${SIGN[@]}"}
-PRODUCTS="$(xcodebuild -project MenuBadge.xcodeproj -scheme MenuBadge -configuration Release -showBuildSettings 2>/dev/null \
-  | awk -F' = ' '/ BUILT_PRODUCTS_DIR / && !found {print $2; found=1}')"
+xcodebuild -project MenuBadge.xcodeproj -scheme MenuBadge -configuration Release -derivedDataPath "$DERIVED" \
+  -quiet build ${SIGN[@]+"${SIGN[@]}"}
+PRODUCTS="$DERIVED/Build/Products/Release"
 if [ ! -x "$PRODUCTS/MenuBadge.app/Contents/MacOS/MenuBadge" ]; then
   echo "build output not found in '$PRODUCTS'; the installed app was left as it was" >&2
   exit 1

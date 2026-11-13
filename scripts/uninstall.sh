@@ -1,5 +1,5 @@
 #!/bin/bash
-# Remove MenuBadge: login item, app (to the Trash) and its Accessibility entry.
+# Remove MenuBadge: login item, app and build folder (to the Trash) and its Accessibility entry.
 # Settings stay in UserDefaults; clear them with: defaults delete com.kiluss.menubadge
 set -euo pipefail
 
@@ -10,5 +10,6 @@ if [ -x "$APP/Contents/MacOS/MenuBadge" ]; then
   "$APP/Contents/MacOS/MenuBadge" --unregister-login-item || true
 fi
 if [ -e "$APP" ]; then trash "$APP"; fi
+if [ -e "$HOME/Library/Caches/MenuBadge" ]; then trash "$HOME/Library/Caches/MenuBadge"; fi
 tccutil reset Accessibility com.kiluss.menubadge >/dev/null 2>&1 || true
 echo "removed MenuBadge"

@@ -29,7 +29,9 @@ scripts/install.sh     # Release build → ~/Applications/MenuBadge.app, migrate
 scripts/uninstall.sh   # login item off, app to the Trash, Accessibility entry reset
 ```
 
-Needs Xcode and `xcodegen` (`brew install xcodegen`). Grant Accessibility once
+Needs Xcode and `xcodegen` (`brew install xcodegen`). The install build goes to
+`~/Library/Caches/MenuBadge/DerivedData`, which Spotlight skips, so only the installed app shows
+up when you search for MenuBadge. Grant Accessibility once
 (System Settings › Privacy & Security › Accessibility › MenuBadge). The app is signed with the
 self-signed `kiluss2 Local Code Signing` identity so the permission survives rebuilds; the
 [mac-tools README](https://github.com/kiluss2/mac-tools#code-signing-for-tools-that-need-privacy-permissions)
