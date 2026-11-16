@@ -22,6 +22,16 @@ visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack
   icons) where macOS hides the items that do not fit: every badge goes on MenuBadge's own icon, up
   to 3 app icons with their badges and "+N" for the rest; its menu lists each app with its count
   and opens it. ⌘-drag the icon next to the clock.
+- **Full-screen alert:** while a full-screen app hides the menu bar, a badge that grows also shows
+  in a card in the top-right corner of that screen for a few seconds; click it to open the app
+  (General › Alerts).
+- **Hide Until New Badge:** hide a badge you have seen (right-click the app's MenuBadge item, the
+  MenuBadge menu, or the app's page in Settings); it comes back with the next new message.
+- **MenuBadge item without a badge:** shown, dimmed, or hidden — per app, or for every app in
+  Default Look.
+- With **Reduce Motion** on (System Settings › Accessibility › Display), every animation becomes a
+  short fade. If Accessibility is granted but not applied yet, General says so and offers
+  Relaunch. **Settings File** exports every setting to a JSON file and imports one on another Mac.
 - **Updates:** MenuBadge asks GitHub for the latest release 10 s after launch and then once a day
   (one anonymous request; turn it off in General). When there is a newer one, General and the menu
   offer Update, which runs the installer bundled in the app: it downloads that release's DMG,
@@ -30,7 +40,8 @@ visible while the Dock is auto-hidden. Successor of `slack-menubar-badge` (Slack
   as JSON in the `MenuBadge.settings.v1` user default; a value this version cannot read keeps its
   default, and settings that cannot be read at all are kept under `MenuBadge.settings.v1.unreadable`.
 - Reads everything through Accessibility (Dock tile `AXStatusLabel`, app `AXExtrasMenuBar`), polled
-  once a second (the Dock posts no notification when a badge changes), and not at all while the
+  once a second (the Dock posts no notification when a badge changes; it does when a tile appears
+  or goes, so a newly pinned or launched app is read at once), and not at all while the
   screens sleep or the screen is locked; ~15 MB, ~0.1 % CPU, nothing animates between blinks.
 
 <p align="center"><img src="docs/images/settings.png" width="560" alt="MenuBadge Settings: an app's placement, live preview and look"></p>
