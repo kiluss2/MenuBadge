@@ -32,9 +32,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         updater = UpdateChecker(store: store)
         settingsWindow = SettingsWindowController(store: store, engine: engine, updater: updater)
         menuBarItem = MenuBarItem(store: store, openSettings: { [weak self] in self?.settingsWindow.show() },
-                                  badgeRows: { [weak self] in self?.engine.compactRows() ?? [] })
+                                  badgeRows: { [weak self] in self?.engine.menuRows() ?? [] })
         engine.menuBarItem = menuBarItem
         menuBarItem.updater = updater
+        menuBarItem.setSnoozed = { [weak self] id, hide in
+            if hide { self?.engine.snooze(id) } else { self?.engine.unsnooze(id) }
+        }
         reconcileLoginItem()
         applySettings()
         observeSettings()

@@ -82,24 +82,10 @@ final class UpdateChecker {
         guard let update = available,
               let script = Bundle.main.url(forResource: "install-release", withExtension: "sh") else { return }
         let log = FileManager.default.homeDirectoryForCurrentUser.appending(path: "Library/Logs/MenuBadge-update.log").path
-
-        var attributes: posix_spawnattr_t?
-        posix_spawnattr_init(&attributes)
-        defer { posix_spawnattr_destroy(&attributes) }
-        posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETSID))
-        var files: posix_spawn_file_actions_t?
-        posix_spawn_file_actions_init(&files)
-        defer { posix_spawn_file_actions_destroy(&files) }
-        posix_spawn_file_actions_addopen(&files, 0, "/dev/null", O_RDONLY, 0)
-        posix_spawn_file_actions_addopen(&files, 1, log, O_WRONLY | O_CREAT | O_TRUNC, 0o644)
-        posix_spawn_file_actions_adddup2(&files, 1, 2)
-
         var environment = ProcessInfo.processInfo.environment
         environment["MENUBADGE_DMG_URL"] = update.dmgURL.absoluteString
-        let argv = ["/bin/bash", script.path].map { strdup($0) } + [nil]
-        let envp = environment.map { strdup("\($0.key)=\($0.value)") } + [nil]
-        defer { (argv + envp).forEach { free($0) } }
-        var pid: pid_t = 0
-        posix_spawn(&pid, "/bin/bash", &files, &attributes, argv, envp)
+        if !DetachedProcess.run(["/bin/bash", script.path], environment: environment, logPath: log) {
+            status = .failed
+        }
     }
 }

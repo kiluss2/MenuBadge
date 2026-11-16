@@ -11,11 +11,15 @@ struct GeneralPane: View {
         Form {
             Section("Permission") {
                 LabeledContent("Accessibility") {
-                    Label(engine.trusted ? "Granted" : "Not granted",
-                          systemImage: engine.trusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .foregroundStyle(engine.trusted ? .green : .orange)
+                    Label(accessText, systemImage: engine.access == .granted ? "checkmark.circle.fill"
+                                                                            : "exclamationmark.triangle.fill")
+                        .foregroundStyle(engine.access == .granted ? .green : .orange)
                 }
-                if !engine.trusted {
+                if engine.access == .needsRelaunch {
+                    Text("MenuBadge is on in Privacy & Security › Accessibility, but macOS has not applied it yet. Opening MenuBadge again applies it.")
+                        .foregroundStyle(.secondary)
+                    Button("Relaunch MenuBadge", action: relaunch)
+                } else if !engine.trusted {
                     Text("MenuBadge reads Dock badges and menu bar icons through Accessibility. Turn MenuBadge on in Privacy & Security › Accessibility; badges start right away.")
                         .foregroundStyle(.secondary)
                     Button("Open Privacy Settings", action: openPrivacySettings)
@@ -35,6 +39,20 @@ struct GeneralPane: View {
                 }
                 Toggle("Open at login", isOn: $store.settings.openAtLogin)
                 Toggle("Pause all badges", isOn: $store.settings.paused)
+            }
+            Section("Alerts") {
+                Toggle(isOn: $store.settings.alertWhenMenuBarHidden) {
+                    Text("Show a card when the menu bar is hidden")
+                    Text("While a full-screen app hides the menu bar, a badge that grows also shows in a card in the screen's corner for a few seconds. Click it to open the app.")
+                }
+            }
+            Section("Settings File") {
+                HStack {
+                    Button("Export…", action: exportSettings)
+                    Button("Import…", action: importSettings)
+                }
+                Text("Saves every setting to a file, or replaces them with one, to set up another Mac the same way.")
+                    .foregroundStyle(.secondary)
             }
             Section("Updates") {
                 Toggle("Check for updates automatically", isOn: $store.settings.checkForUpdates)
@@ -68,6 +86,57 @@ struct GeneralPane: View {
         case .upToDate: "MenuBadge is up to date"
         case .failed: "Could not check for updates"
         }
+    }
+
+    private var accessText: String {
+        switch engine.access {
+        case .granted: "Granted"
+        case .notGranted: "Not granted"
+        case .needsRelaunch: "Needs a relaunch"
+        }
+    }
+
+    private func relaunch() {
+        if DetachedProcess.relaunchSoon() { NSApp.terminate(nil) }
+    }
+
+    private func exportSettings() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "MenuBadge Settings.json"
+        panel.allowedContentTypes = [.json]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try store.settings.exportData().write(to: url, options: .atomic)
+        } catch {
+            showError("Could not save the settings file.", error)
+        }
+    }
+
+    private func importSettings() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let imported: MenuBadgeSettings
+        do {
+            imported = try MenuBadgeSettings.imported(from: Data(contentsOf: url))
+        } catch {
+            showError("This file is not MenuBadge settings.", error)
+            return
+        }
+        let confirm = NSAlert()
+        confirm.messageText = "Replace your MenuBadge settings?"
+        confirm.informativeText = "Your apps, looks and options are replaced by the ones in \"\(url.lastPathComponent)\" (\(imported.apps.count) apps)."
+        confirm.addButton(withTitle: "Replace")
+        confirm.addButton(withTitle: "Cancel")
+        if confirm.runModal() == .alertFirstButtonReturn { store.settings = imported }
+    }
+
+    private func showError(_ message: String, _ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = message
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.runModal()
     }
 
     private func openPrivacySettings() {

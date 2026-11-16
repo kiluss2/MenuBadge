@@ -16,6 +16,13 @@ struct AppDetailPane: View {
                     LabeledContent("Status", value: AppStatusText.describe(
                         entry: entry, runtime: engine.runtime[bundleID], paused: store.settings.paused,
                         trusted: engine.trusted))
+                    if engine.snoozedIDs.contains(bundleID) {
+                        Button("Show Badge Now") { engine.unsnooze(bundleID) }
+                    } else {
+                        Button("Hide Until New Badge") { engine.snooze(bundleID) }
+                            .disabled(!engine.hasBadge(bundleID))
+                            .help("Hides the badge it shows now; it comes back with the next new one")
+                    }
                 }
                 Section("Where") {
                     Picker("Placement", selection: $store[app: bundleID].placement) {
@@ -23,9 +30,12 @@ struct AppDetailPane: View {
                         Text("On the app's icon").tag(Placement.onAppIcon)
                         Text("MenuBadge item").tag(Placement.ownItem)
                     }
-                    Picker("MenuBadge item", selection: $store[app: bundleID].ownItemVisibility) {
-                        Text("While the app is open").tag(OwnItemVisibility.always)
-                        Text("Only with a badge").tag(OwnItemVisibility.onlyWithBadge)
+                    Picker("MenuBadge item", selection: $store[app: bundleID].visibility) {
+                        Text("Same as Default Look (\(VisibilityText.name(store.settings.defaultVisibility)))")
+                            .tag(OwnItemVisibility?.none)
+                        ForEach(OwnItemVisibility.allCases, id: \.self) { visibility in
+                            Text(VisibilityText.name(visibility)).tag(Optional(visibility))
+                        }
                     }
                     Text("Auto puts the badge on the app's own menu bar icon, or on a MenuBadge item with the app's icon when it has none. A MenuBadge item goes away when its app quits.")
                         .foregroundStyle(.secondary)

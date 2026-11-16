@@ -72,11 +72,24 @@ enum BadgeAnimations {
         layer.add(shake, forKey: "new")
     }
 
+    /// System Settings › Accessibility › Display › Reduce Motion.
+    static var reduceMotion: Bool { NSWorkspace.shared.accessibilityDisplayShouldReduceMotion }
+
+    /// A short, shallow fade: what every effect becomes with Reduce Motion (no movement or scaling).
+    static func fade(_ layer: CALayer, key: String) {
+        let fade = CAKeyframeAnimation(keyPath: "opacity")
+        fade.values = [1, 0.45, 1]
+        fade.duration = 0.6
+        fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        layer.add(fade, forKey: key)
+    }
+
     static func playNew(_ effect: NewBadgeEffect, on layer: CALayer) {
-        switch effect {
+        switch MotionPolicy.onNew(effect, reduceMotion: reduceMotion) {
         case .shake: shake(layer)
         case .bounce: bounce(layer, height: 5, key: "new")
-        case .none: break
+        case .fade: fade(layer, key: "new")
+        default: break
         }
     }
 

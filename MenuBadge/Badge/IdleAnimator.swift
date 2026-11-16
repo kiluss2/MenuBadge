@@ -51,12 +51,13 @@ final class IdleAnimator {
 
     private func fire() {
         guard let kind else { return }
-        switch kind {
+        switch MotionPolicy.idle(kind, reduceMotion: BadgeAnimations.reduceMotion) {
         case .blink: BadgeAnimations.blink(badge, double: .random(in: 0..<1) < AnimationCurves.doubleBlinkChance)
         case .breathe: BadgeAnimations.breathe(badge)
         case .bounce: BadgeAnimations.bounce(badge, height: 2.5)
         case .ripple: BadgeAnimations.ripple(ring)
-        case .none: return
+        case .fade: BadgeAnimations.fade(badge, key: "idle")
+        case .shake, .none: return
         }
         schedule()
     }

@@ -14,17 +14,22 @@ final class OwnItemPresenter: NSObject {
     private struct Shown: Equatable {
         let label: BadgeLabel?
         let look: BadgeAppearance
+        let dimmed: Bool
     }
     private var shown: Shown?
     /// The app icon drawn at the layout's icon position, rebuilt when either changes.
     private var paddedIcon: (source: NSImage, layout: BadgeGeometry.OwnItemLayout, image: NSImage)?
 
-    init(bundleID: String) {
+    /// The right-click menu (Open, Hide Until New Badge).
+    private let contextMenu: () -> NSMenu?
+
+    init(bundleID: String, contextMenu: @escaping () -> NSMenu?) {
         self.bundleID = bundleID
+        self.contextMenu = contextMenu
     }
 
-    /// `label` nil shows the app icon alone.
-    func show(_ label: BadgeLabel?, _ a: BadgeAppearance, appIcon: NSImage) {
+    /// `label` nil shows the app icon alone; `dimmed` greys it ("Dimmed without a badge").
+    func show(_ label: BadgeLabel?, _ a: BadgeAppearance, appIcon: NSImage, dimmed: Bool = false) {
         let item = self.item ?? makeItem()
         let badgeSize = label.map { BadgeRenderer.badgeSize($0, a) }
         // The usual padding beside the icon, plus room for the badge on its corner's side.
@@ -34,7 +39,9 @@ final class OwnItemPresenter: NSObject {
         guard let button = item.button else { return }
         let image = padded(appIcon, layout, iconSize: a.iconSize)
         if button.image !== image { button.image = image }
-        defer { redrawCopiesOnOtherDisplays(button, Shown(label: label, look: a)) }
+        let alpha: CGFloat = dimmed ? 0.4 : 1
+        if button.alphaValue != alpha { button.alphaValue = alpha }
+        defer { redrawCopiesOnOtherDisplays(button, Shown(label: label, look: a, dimmed: dimmed)) }
 
         guard let label, let size = badgeSize, let host = button.layer else {
             badgeLayer.isHidden = true
@@ -113,12 +120,24 @@ final class OwnItemPresenter: NSObject {
         item.button?.wantsLayer = true
         item.button?.imagePosition = .imageOnly
         item.button?.target = self
-        item.button?.action = #selector(openApp)
+        item.button?.action = #selector(clicked)
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         self.item = item
         return item
     }
 
-    @objc private func openApp() {
+    /// Left click opens the app; right click (or Control-click) shows the item's menu.
+    @objc private func clicked() {
+        let event = NSApp.currentEvent
+        let wantsMenu = event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true
+        if wantsMenu, let button = item?.button, let menu = contextMenu() {
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: button.bounds.height + 4), in: button)
+        } else {
+            openApp()
+        }
+    }
+
+    private func openApp() {
         guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return }
         NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }

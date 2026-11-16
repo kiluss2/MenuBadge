@@ -9,6 +9,8 @@ final class DockBadgeReader {
     private var lastScan = Date.distantPast
     /// A running app without a Dock tile (menu bar-only apps) would otherwise rescan every tick.
     private let minScanInterval: TimeInterval = 5
+    /// The last scan was refused with `kAXErrorAPIDisabled`: the permission is on but not applied.
+    private(set) var apiDisabled = false
 
     /// Forget cached tiles (Dock restarted, apps launched or quit).
     func reset() {
@@ -35,6 +37,8 @@ final class DockBadgeReader {
         guard let dockApp = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.dock").first
         else { return }
         let dock = AX.app(pid: dockApp.processIdentifier)
+        var value: CFTypeRef?
+        apiDisabled = AXUIElementCopyAttributeValue(dock, kAXChildrenAttribute as CFString, &value) == .apiDisabled
         for list in AX.children(dock) where (AX.attr(list, kAXRoleAttribute) as? String) == "AXList" {
             for tile in AX.children(list) {
                 guard let url = AX.attr(tile, kAXURLAttribute) as? URL, let id = bundleID(of: url) else { continue }

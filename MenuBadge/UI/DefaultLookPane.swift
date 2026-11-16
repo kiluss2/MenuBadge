@@ -13,6 +13,15 @@ struct DefaultLookPane: View {
                 Text("Apps follow this look for every setting you have not changed on the app itself.")
                     .foregroundStyle(.secondary)
             }
+            Section("MenuBadge item") {
+                Picker("Shows", selection: $store.settings.defaultVisibility) {
+                    ForEach(OwnItemVisibility.allCases, id: \.self) { visibility in
+                        Text(VisibilityText.name(visibility)).tag(visibility)
+                    }
+                }
+                Text("For apps whose badge goes on a MenuBadge item. An app can choose its own on its page.")
+                    .foregroundStyle(.secondary)
+            }
             AppearanceEditor(appearance: $store.settings.defaults, picked: playInPreview)
             Section {
                 Button("Restore Original Look", action: restore)

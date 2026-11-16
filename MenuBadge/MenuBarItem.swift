@@ -10,6 +10,8 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
         let bundleID: String
         let name: String
         let text: String
+        /// Hidden until a new badge ("Hide Until New Badge").
+        let snoozed: Bool
     }
 
     private let store: SettingsStore
@@ -18,6 +20,8 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
     private var item: NSStatusItem?
     /// Adds "Update to X…" when a newer release is known, and "Check for Updates…".
     weak var updater: UpdateChecker?
+    /// Hides (true) or shows again (false) an app's badge.
+    var setSnoozed: ((String, Bool) -> Void)?
     private let pauseItem = NSMenuItem(title: "Pause All Badges", action: #selector(togglePause), keyEquivalent: "")
     /// What compact mode shows now; nil = the plain glyph.
     private var compact: (layout: CompactLayout, appearances: [String: BadgeAppearance])?
@@ -83,10 +87,11 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
     /// Rebuilt on every open: the apps with a badge (compact mode), then the fixed items.
     func menuWillOpen(_ menu: NSMenu) {
         menu.removeAllItems()
-        if store.settings.compact {
-            let rows = badgeRows()
-            for row in rows { menu.addItem(appItem(row)) }
-            if !rows.isEmpty { menu.addItem(.separator()) }
+        let rows = badgeRows()
+        for row in rows { menu.addItem(appItem(row)) }
+        if !rows.isEmpty {
+            menu.addItem(snoozeMenu(rows))
+            menu.addItem(.separator())
         }
         let settings = NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
         settings.target = self
@@ -113,6 +118,19 @@ final class MenuBarItem: NSObject, NSMenuDelegate {
     }
 
     @objc private func installUpdate() { updater?.install() }
+
+    /// "Hide Until New Badge ▸ Slack ✓": a hidden app is ticked; choosing it shows it again.
+    private func snoozeMenu(_ rows: [BadgeRow]) -> NSMenuItem {
+        let parent = NSMenuItem(title: "Hide Until New Badge", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        for row in rows {
+            let item = ClosureMenuItem(row.name) { [weak self] in self?.setSnoozed?(row.bundleID, !row.snoozed) }
+            item.state = row.snoozed ? .on : .off
+            submenu.addItem(item)
+        }
+        parent.submenu = submenu
+        return parent
+    }
 
     /// "Slack        3": name on the left, badge text right-aligned; opens the app.
     private func appItem(_ row: BadgeRow) -> NSMenuItem {
