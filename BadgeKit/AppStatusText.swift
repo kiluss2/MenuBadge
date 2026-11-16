@@ -8,7 +8,9 @@ public enum AppStatusText {
         if paused { return "Paused" }
         if !trusted { return "Needs Accessibility" }
         var parts: [String] = []
-        if let runtime, runtime.isRunning {
+        if let runtime, runtime.isRunning, runtime.snoozed {
+            parts.append("Running · Hidden until a new badge")
+        } else if let runtime, runtime.isRunning {
             switch runtime.location {
             case .appIcon: parts.append("Running · On its icon")
             case .ownItem:

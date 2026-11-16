@@ -40,3 +40,9 @@ private func slack(_ placement: Placement = .auto) -> AppEntry {
     #expect(AppStatusText.describe(entry: slack(), runtime: compact) == "Running · MenuBadge item")
     #expect(AppStatusText.placementNote(entry: slack(), runtime: compact) == nil)
 }
+
+@Test func statusSaysTheBadgeIsHiddenUntilNew() {
+    var hidden = AppRuntime(isRunning: true, location: .hidden, hasOwnIcon: true)
+    hidden.snoozed = true
+    #expect(AppStatusText.describe(entry: slack(), runtime: hidden) == "Running · Hidden until a new badge")
+}

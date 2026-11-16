@@ -6,6 +6,8 @@ public struct AppRuntime: Equatable, Sendable {
     public var location: Location
     /// Whether the running app has a menu bar icon of its own; nil while not known yet.
     public var hasOwnIcon: Bool?
+    /// The user hid the badge until a new one comes ("Hide until new").
+    public var snoozed = false
 
     public init(isRunning: Bool, location: Location, hasOwnIcon: Bool?) {
         self.isRunning = isRunning
