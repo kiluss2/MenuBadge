@@ -97,7 +97,7 @@ private final class MemoryDefaults: SettingsStorage {
     d.set(Data(json.utf8), forKey: "MenuBadge.settings.v1")
     let s = SettingsStore(defaults: d).settings
     #expect(s.apps.map(\.id) == ["ru.keepcoder.Telegram"])
-    #expect(s.apps[0].placement == .ownItem && s.apps[0].enabled && s.apps[0].ownItemVisibility == .always)
+    #expect(s.apps[0].placement == .ownItem && s.apps[0].enabled && s.apps[0].visibility == nil)
     #expect(s.defaults == .standard && s.showMenuBarIcon && s.openAtLogin && !s.paused)
 }
 

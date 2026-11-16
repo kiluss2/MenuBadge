@@ -63,3 +63,8 @@ private func input(_ p: Placement = .auto, _ v: OwnItemVisibility = .always, run
     withIcon.forceVisible = true
     #expect(resolvePlacement(withIcon) == .overlay(iconAX: slackIcon))
 }
+
+@Test func dimmedItemStaysWithoutABadge() {
+    #expect(resolvePlacement(input(.ownItem, .dimmedWithoutBadge, badge: false)) == .ownItem(showBadge: false))
+    #expect(resolvePlacement(input(.ownItem, .dimmedWithoutBadge)) == .ownItem(showBadge: true))
+}

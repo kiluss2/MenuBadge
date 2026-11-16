@@ -14,6 +14,8 @@ public enum Placement: String, Codable, CaseIterable, Sendable {
 public enum OwnItemVisibility: String, Codable, CaseIterable, Sendable {
     /// While the app is open, badge or not.
     case always
+    /// While the app is open, the icon dimmed when there is no badge.
+    case dimmedWithoutBadge
     case onlyWithBadge
 }
 
@@ -24,7 +26,8 @@ public struct AppEntry: Codable, Equatable, Identifiable, Sendable {
     public var displayName: String
     public var enabled = true
     public var placement = Placement.auto
-    public var ownItemVisibility = OwnItemVisibility.always
+    /// When the app's MenuBadge item shows; nil follows Default Look.
+    public var visibility: OwnItemVisibility?
     public var overrides = AppearanceOverrides()
     /// Whether the app had a usable menu bar icon the last time it was seen running.
     public var lastSeenHadOwnIcon: Bool?
@@ -43,11 +46,20 @@ public struct AppEntry: Codable, Equatable, Identifiable, Sendable {
         displayName = c.lenient(String.self, .displayName) ?? id
         enabled = c.lenient(Bool.self, .enabled) ?? true
         placement = c.lenient(Placement.self, .placement) ?? .auto
-        ownItemVisibility = c.lenient(OwnItemVisibility.self, .ownItemVisibility) ?? .always
+        if let explicit = c.lenient(OwnItemVisibility.self, .visibility) {
+            visibility = explicit
+        } else {
+            // 1.1.x stored every app's choice as `ownItemVisibility`; `always` was the only default.
+            let legacy = try decoder.container(keyedBy: LegacyKeys.self)
+            let old = legacy.lenient(OwnItemVisibility.self, .ownItemVisibility)
+            visibility = old == .always ? nil : old
+        }
         overrides = c.lenient(AppearanceOverrides.self, .overrides) ?? AppearanceOverrides()
         lastSeenHadOwnIcon = c.lenient(Bool.self, .lastSeenHadOwnIcon)
         badgeSeen = c.lenient(Bool.self, .badgeSeen) ?? false
     }
+
+    private enum LegacyKeys: String, CodingKey { case ownItemVisibility }
 }
 
 public struct MenuBadgeSettings: Codable, Equatable, Sendable {
@@ -63,6 +75,10 @@ public struct MenuBadgeSettings: Codable, Equatable, Sendable {
     public var compact = false
     /// Look for a newer GitHub release once a day.
     public var checkForUpdates = true
+    /// When MenuBadge items show, for apps that do not set their own.
+    public var defaultVisibility = OwnItemVisibility.always
+    /// A card in the screen's corner when a badge grows while the menu bar is hidden (full screen).
+    public var alertWhenMenuBarHidden = true
 
     public init(apps: [AppEntry]) { self.apps = apps }
 
@@ -78,6 +94,30 @@ public struct MenuBadgeSettings: Codable, Equatable, Sendable {
         paused = c.lenient(Bool.self, .paused) ?? false
         compact = c.lenient(Bool.self, .compact) ?? false
         checkForUpdates = c.lenient(Bool.self, .checkForUpdates) ?? true
+        defaultVisibility = c.lenient(OwnItemVisibility.self, .defaultVisibility) ?? .always
+        alertWhenMenuBarHidden = c.lenient(Bool.self, .alertWhenMenuBarHidden) ?? true
+    }
+
+    /// When the app's MenuBadge item shows: its own choice, else Default Look's.
+    public func visibility(for bundleID: String) -> OwnItemVisibility {
+        apps.first { $0.id == bundleID }?.visibility ?? defaultVisibility
+    }
+
+    /// Settings as a readable JSON file (Settings › Export).
+    public func exportData() throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(self)
+    }
+
+    public struct NotMenuBadgeSettings: Error {}
+
+    /// Settings read back from an exported file; throws for a file that is not MenuBadge settings
+    /// (it must at least list apps). Unknown or broken values keep their defaults, as at launch.
+    public static func imported(from data: Data) throws -> MenuBadgeSettings {
+        let settings = try JSONDecoder().decode(MenuBadgeSettings.self, from: data)
+        guard settings.version == currentVersion else { throw NotMenuBadgeSettings() }
+        return settings
     }
 
     /// Slack on, with today's look, so moving from slack-menubar-badge changes nothing visible.

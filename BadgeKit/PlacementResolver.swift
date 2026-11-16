@@ -46,7 +46,7 @@ public func resolvePlacement(_ input: PlacementInput) -> PlacementDecision {
     }
     // Forced own item, or no usable icon: never lose a badge.
     switch input.visibility {
-    case .always: return .ownItem(showBadge: input.hasBadge)
+    case .always, .dimmedWithoutBadge: return .ownItem(showBadge: input.hasBadge)
     case .onlyWithBadge: return input.hasBadge ? .ownItem(showBadge: true) : .none
     }
 }

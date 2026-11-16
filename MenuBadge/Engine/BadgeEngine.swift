@@ -210,7 +210,7 @@ final class BadgeEngine {
         let appearance = store.settings.appearance(for: id)
         let current = store.settings.apps.first { $0.id == id } ?? entry
         var input = PlacementInput(
-            placement: current.placement, visibility: current.ownItemVisibility, isRunning: app != nil,
+            placement: current.placement, visibility: store.settings.visibility(for: id), isRunning: app != nil,
             iconAX: iconAX, iconOnScreen: iconOnScreen, hasBadge: label != nil)
         input.iconPending = app != nil && presence == .pending
         input.forceVisible = inDemo
