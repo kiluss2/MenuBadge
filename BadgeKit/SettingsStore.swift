@@ -63,24 +63,21 @@ public final class SettingsStore {
         set { update(bundleID) { $0 = newValue } }
     }
 
-    /// One app's resolved look. Setting it stores only the fields that differ from the shared
-    /// default, so untouched fields keep following the default.
+    /// One app's resolved look. Setting it stores the fields that changed as the app's own (even
+    /// when equal to Default Look); untouched fields keep following Default Look. ↺ clears a field.
     public subscript(appearanceOf bundleID: String) -> BadgeAppearance {
         get { settings.appearance(for: bundleID) }
         set {
-            let overrides = AppearanceOverrides(diff: newValue, from: settings.defaults)
-            update(bundleID) { $0.overrides = overrides }
+            let old = settings.appearance(for: bundleID)
+            update(bundleID) { $0.overrides = $0.overrides.applying(from: old, to: newValue) }
         }
     }
 
-    /// When one app's MenuBadge item shows. Setting the Default Look value makes the app follow
-    /// Default Look again (as the look's fields do), so a later change there applies to it too.
+    /// When one app's MenuBadge item shows. A pick is the app's own (even the Default Look value);
+    /// ↺ (`visibility = nil`) follows Default Look again.
     public subscript(visibilityOf bundleID: String) -> OwnItemVisibility {
         get { settings.visibility(for: bundleID) }
-        set {
-            let own = newValue == settings.defaultVisibility ? nil : newValue
-            update(bundleID) { $0.visibility = own }
-        }
+        set { update(bundleID) { $0.visibility = newValue } }
     }
 
     /// Changes one app's entry; saves only when something actually changed.

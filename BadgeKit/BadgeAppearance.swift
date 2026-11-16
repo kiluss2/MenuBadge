@@ -110,6 +110,22 @@ public struct AppearanceOverrides: Codable, Equatable, Hashable, Sendable {
 
     public var isEmpty: Bool { self == AppearanceOverrides() }
 
+    /// These overrides after the user edited the look from `old` to `new`: every field that changed
+    /// is set for the app, even to the Default Look value, so later Default Look changes leave it
+    /// alone; fields not touched keep following (or overriding) as before.
+    public func applying(from old: BadgeAppearance, to new: BadgeAppearance) -> AppearanceOverrides {
+        var o = self
+        if new.corner != old.corner { o.corner = new.corner }
+        if new.size != old.size { o.size = new.size }
+        if new.countColor != old.countColor { o.countColor = new.countColor }
+        if new.dotColor != old.dotColor { o.dotColor = new.dotColor }
+        if new.textColor != old.textColor { o.textColor = new.textColor }
+        if new.idle != old.idle { o.idle = new.idle }
+        if new.onNew != old.onNew { o.onNew = new.onNew }
+        if new.iconSize != old.iconSize { o.iconSize = new.iconSize }
+        return o
+    }
+
     public func resolved(over base: BadgeAppearance) -> BadgeAppearance {
         let range = BadgeAppearance.sizeRange
         let iconRange = BadgeAppearance.iconSizeRange

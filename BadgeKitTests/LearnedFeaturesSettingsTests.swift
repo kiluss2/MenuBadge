@@ -47,16 +47,27 @@ import BadgeKit
     #expect(throws: (any Error).self) { try MenuBadgeSettings.imported(from: Data(#"{"name":"x"}"#.utf8)) }
 }
 
-@MainActor @Test func pickingTheDefaultVisibilityFollowsDefaultLook() {
+@MainActor @Test func aPickedVisibilityStaysWhenDefaultLookChanges() {
     let store = SettingsStore(defaults: TestDefaults())
-    store.settings.defaultVisibility = .dimmedWithoutBadge
     let id = store.settings.apps[0].id
-    store[visibilityOf: id] = .onlyWithBadge
-    #expect(store.settings.apps[0].visibility == .onlyWithBadge)
-    store[visibilityOf: id] = .dimmedWithoutBadge // same as Default Look → follows it
-    #expect(store.settings.apps[0].visibility == nil)
-    store.settings.defaultVisibility = .always
+    store[visibilityOf: id] = .always // the same as Default Look, but picked for this app
+    #expect(store.settings.apps[0].visibility == .always)
+    store.settings.defaultVisibility = .onlyWithBadge
     #expect(store[visibilityOf: id] == .always)
+    store.update(id) { $0.visibility = nil } // ↺ follows Default Look again
+    #expect(store[visibilityOf: id] == .onlyWithBadge)
+}
+
+@MainActor @Test func aPickedLookValueStaysWhenDefaultLookChanges() {
+    let store = SettingsStore(defaults: TestDefaults())
+    let id = store.settings.apps[0].id
+    store[appearanceOf: id].size = 15
+    store[appearanceOf: id].size = 12 // back to the Default Look value: still the app's own pick
+    #expect(store.settings.apps[0].overrides.size == 12)
+    #expect(store.settings.apps[0].overrides.corner == nil) // untouched fields keep following
+    store.settings.defaults.size = 14
+    store.settings.defaults.corner = .topLeft
+    #expect(store[appearanceOf: id].size == 12 && store[appearanceOf: id].corner == .topLeft)
 }
 
 private final class TestDefaults: SettingsStorage {

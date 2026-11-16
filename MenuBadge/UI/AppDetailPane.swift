@@ -30,13 +30,25 @@ struct AppDetailPane: View {
                         Text("On the app's icon").tag(Placement.onAppIcon)
                         Text("MenuBadge item").tag(Placement.ownItem)
                     }
-                    Picker("MenuBadge item", selection: $store[visibilityOf: bundleID]) {
-                        ForEach(OwnItemVisibility.allCases, id: \.self) { visibility in
-                            Text(visibility == store.settings.defaultVisibility
-                                 ? "\(VisibilityText.name(visibility)) (Default Look)"
-                                 : VisibilityText.name(visibility))
-                                .tag(visibility)
+                    LabeledContent {
+                        HStack {
+                            Picker("MenuBadge item", selection: $store[visibilityOf: bundleID]) {
+                                ForEach(OwnItemVisibility.allCases, id: \.self) { visibility in
+                                    Text(VisibilityText.name(visibility)).tag(visibility)
+                                }
+                            }
+                            .labelsHidden()
+                            if entry.visibility != nil {
+                                Button("Use Default Look for MenuBadge item", systemImage: "arrow.uturn.backward",
+                                       action: followDefaultVisibility)
+                                    .labelStyle(.iconOnly)
+                                    .buttonStyle(.borderless)
+                                    .help("Use the Default Look value")
+                            }
                         }
+                    } label: {
+                        Text("MenuBadge item")
+                        Text(entry.visibility != nil ? "Set for this app" : "From Default Look")
                     }
                     Text("Auto puts the badge on the app's own menu bar icon, or on a MenuBadge item with the app's icon when it has none. A MenuBadge item goes away when its app quits.")
                         .foregroundStyle(.secondary)
@@ -66,6 +78,10 @@ struct AppDetailPane: View {
 
     private func previewAllStates() {
         engine.runDemo(bundleID: bundleID)
+    }
+
+    private func followDefaultVisibility() {
+        store.update(bundleID) { $0.visibility = nil }
     }
 
     private func resetLook() {
