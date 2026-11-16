@@ -46,3 +46,21 @@ import BadgeKit
     #expect(throws: (any Error).self) { try MenuBadgeSettings.imported(from: Data("hello".utf8)) }
     #expect(throws: (any Error).self) { try MenuBadgeSettings.imported(from: Data(#"{"name":"x"}"#.utf8)) }
 }
+
+@MainActor @Test func pickingTheDefaultVisibilityFollowsDefaultLook() {
+    let store = SettingsStore(defaults: TestDefaults())
+    store.settings.defaultVisibility = .dimmedWithoutBadge
+    let id = store.settings.apps[0].id
+    store[visibilityOf: id] = .onlyWithBadge
+    #expect(store.settings.apps[0].visibility == .onlyWithBadge)
+    store[visibilityOf: id] = .dimmedWithoutBadge // same as Default Look → follows it
+    #expect(store.settings.apps[0].visibility == nil)
+    store.settings.defaultVisibility = .always
+    #expect(store[visibilityOf: id] == .always)
+}
+
+private final class TestDefaults: SettingsStorage {
+    private var values: [String: Any] = [:]
+    func data(forKey key: String) -> Data? { values[key] as? Data }
+    func set(_ value: Any?, forKey key: String) { values[key] = value }
+}

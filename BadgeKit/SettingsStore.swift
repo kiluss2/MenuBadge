@@ -73,6 +73,16 @@ public final class SettingsStore {
         }
     }
 
+    /// When one app's MenuBadge item shows. Setting the Default Look value makes the app follow
+    /// Default Look again (as the look's fields do), so a later change there applies to it too.
+    public subscript(visibilityOf bundleID: String) -> OwnItemVisibility {
+        get { settings.visibility(for: bundleID) }
+        set {
+            let own = newValue == settings.defaultVisibility ? nil : newValue
+            update(bundleID) { $0.visibility = own }
+        }
+    }
+
     /// Changes one app's entry; saves only when something actually changed.
     public func update(_ bundleID: String, _ change: (inout AppEntry) -> Void) {
         guard let i = settings.apps.firstIndex(where: { $0.id == bundleID }) else { return }
