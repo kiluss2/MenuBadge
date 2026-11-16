@@ -4,6 +4,8 @@ import SwiftUI
 /// Corner, size, colours and animations of a badge.
 struct AppearanceEditor: View {
     @Binding var appearance: BadgeAppearance
+    /// Default Look, to mark the matching choice of an app's picker; nil when editing Default Look.
+    var defaults: BadgeAppearance?
     /// The app's own changes, to mark which values it sets; nil when editing Default Look.
     var overrides: AppearanceOverrides?
     /// Makes one value of the app follow Default Look again.
@@ -16,7 +18,7 @@ struct AppearanceEditor: View {
             AppearanceRow(title: "Corner", field: .corner, overrides: overrides, reset: reset) {
                 Picker("Corner", selection: $appearance.corner) {
                     ForEach(Corner.allCases, id: \.self) { corner in
-                        Text(corner.title).tag(corner)
+                        Text(DefaultMark.title(corner.title, isDefault: corner == defaults?.corner)).tag(corner)
                     }
                 }
                 .labelsHidden()
@@ -46,7 +48,7 @@ struct AppearanceEditor: View {
             AppearanceRow(title: "While shown", field: .idle, overrides: overrides, reset: reset) {
                 Picker("While shown", selection: idleSelection) {
                     ForEach(IdleAnimation.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(kind)
+                        Text(DefaultMark.title(kind.title, isDefault: kind == defaults?.idle)).tag(kind)
                     }
                 }
                 .labelsHidden()
@@ -54,7 +56,7 @@ struct AppearanceEditor: View {
             AppearanceRow(title: "New badge", field: .onNew, overrides: overrides, reset: reset) {
                 Picker("New badge", selection: onNewSelection) {
                     ForEach(NewBadgeEffect.allCases, id: \.self) { effect in
-                        Text(effect.title).tag(effect)
+                        Text(DefaultMark.title(effect.title, isDefault: effect == defaults?.onNew)).tag(effect)
                     }
                 }
                 .labelsHidden()

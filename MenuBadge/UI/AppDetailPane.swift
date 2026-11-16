@@ -34,7 +34,9 @@ struct AppDetailPane: View {
                         HStack {
                             Picker("MenuBadge item", selection: $store[visibilityOf: bundleID]) {
                                 ForEach(OwnItemVisibility.allCases, id: \.self) { visibility in
-                                    Text(VisibilityText.name(visibility)).tag(visibility)
+                                    Text(DefaultMark.title(VisibilityText.name(visibility),
+                                                        isDefault: visibility == store.settings.defaultVisibility))
+                                        .tag(visibility)
                                 }
                             }
                             .labelsHidden()
@@ -68,7 +70,8 @@ struct AppDetailPane: View {
                             .disabled(entry.overrides.isEmpty)
                     }
                 }
-                AppearanceEditor(appearance: $store[appearanceOf: bundleID], overrides: entry.overrides,
+                AppearanceEditor(appearance: $store[appearanceOf: bundleID], defaults: store.settings.defaults,
+                                 overrides: entry.overrides,
                                  reset: resetField, picked: playInPreview)
             }
             .formStyle(.grouped)
