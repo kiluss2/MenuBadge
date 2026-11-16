@@ -16,6 +16,8 @@ final class OwnItemPresenter: NSObject {
         let look: BadgeAppearance
     }
     private var shown: Shown?
+    /// The app icon drawn at the layout's icon position, rebuilt when either changes.
+    private var paddedIcon: (source: NSImage, layout: BadgeGeometry.OwnItemLayout, image: NSImage)?
 
     init(bundleID: String) {
         self.bundleID = bundleID
@@ -25,12 +27,13 @@ final class OwnItemPresenter: NSObject {
     func show(_ label: BadgeLabel?, _ a: BadgeAppearance, appIcon: NSImage) {
         let item = self.item ?? makeItem()
         let badgeSize = label.map { BadgeRenderer.badgeSize($0, a) }
-        // Wide enough that a badge on the 16 pt icon's corner is not cut off by the item.
-        let length = BadgeGeometry.ownItemLength(size: a.size, badgeWidth: badgeSize.map { Double($0.width) } ?? 0,
-                                                 iconSize: a.iconSize)
-        if item.length != length { item.length = length }
+        // The usual padding beside the icon, plus room for the badge on its corner's side.
+        let layout = BadgeGeometry.ownItemLayout(size: a.size, badgeWidth: badgeSize.map { Double($0.width) } ?? 0,
+                                                 iconSize: a.iconSize, corner: a.corner)
+        if item.length != layout.length { item.length = layout.length }
         guard let button = item.button else { return }
-        if button.image !== appIcon { button.image = appIcon }
+        let image = padded(appIcon, layout, iconSize: a.iconSize)
+        if button.image !== image { button.image = image }
         defer { redrawCopiesOnOtherDisplays(button, Shown(label: label, look: a)) }
 
         guard let label, let size = badgeSize, let host = button.layer else {
@@ -39,10 +42,12 @@ final class OwnItemPresenter: NSObject {
             return
         }
         let bounds = button.bounds
-        // Geometry works top-down like AX; flip when the button's layer is bottom-up.
+        // Geometry works top-down like AX; flip when the button's layer is bottom-up. The padded
+        // image is centred in the button, so the icon starts at `iconX` of the item's width.
+        let left = (bounds.width - layout.length) / 2 + layout.iconX
+        let iconAX = CGRect(x: left, y: 0, width: a.iconSize, height: bounds.height)
         var rect = BadgeGeometry.clamped(
-            BadgeGeometry.badgeRectAX(iconAX: CGRect(origin: .zero, size: bounds.size), corner: a.corner, badgeSize: size,
-                                      glyphSize: a.iconSize),
+            BadgeGeometry.badgeRectAX(iconAX: iconAX, corner: a.corner, badgeSize: size, glyphSize: a.iconSize),
             to: CGRect(origin: .zero, size: bounds.size))
         if !button.isFlipped { rect.origin.y = bounds.height - rect.maxY }
 
@@ -61,6 +66,21 @@ final class OwnItemPresenter: NSObject {
         BadgeAnimations.configureRing(ring, frame: rect, color: NSColor(color))
         CATransaction.commit()
         idle.start(a.idle)
+    }
+
+    /// `icon` on a canvas as wide as the item, centred in the `iconSize` slot that starts at the
+    /// layout's `iconX` (a button centres its image; the icon is off centre to leave the badge room).
+    private func padded(_ icon: NSImage, _ layout: BadgeGeometry.OwnItemLayout, iconSize: Double) -> NSImage {
+        if let cached = paddedIcon, cached.source === icon, cached.layout == layout { return cached.image }
+        let size = NSSize(width: layout.length, height: max(icon.size.height, 1))
+        let image = NSImage(size: size, flipped: false) { _ in
+            let x = layout.iconX + (iconSize - icon.size.width) / 2
+            icon.draw(in: CGRect(x: x, y: 0, width: icon.size.width, height: icon.size.height))
+            return true
+        }
+        image.isTemplate = icon.isTemplate
+        paddedIcon = (icon, layout, image)
+        return image
     }
 
     func hide() {

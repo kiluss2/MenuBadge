@@ -80,13 +80,15 @@ final class PreviewBadgeView: NSView {
         for (i, sample) in samples.enumerated() {
             // A MenuBadge item, 24 pt tall like the real ones, in top-down coordinates.
             let size = BadgeRenderer.badgeSize(sample.label, a)
-            let width = BadgeGeometry.ownItemLength(size: a.size, badgeWidth: size.width, iconSize: a.iconSize)
-            let item = CGRect(x: 24 + CGFloat(i) * 60, y: (bounds.height - 24) / 2, width: width, height: 24)
+            let layout = BadgeGeometry.ownItemLayout(size: a.size, badgeWidth: size.width, iconSize: a.iconSize,
+                                                     corner: a.corner)
+            let item = CGRect(x: 24 + CGFloat(i) * 60, y: (bounds.height - 24) / 2, width: layout.length, height: 24)
             let icon = a.iconSize
+            let iconAX = CGRect(x: item.minX + layout.iconX, y: item.minY, width: icon, height: item.height)
             var rect = BadgeGeometry.clamped(
-                BadgeGeometry.badgeRectAX(iconAX: item, corner: a.corner, badgeSize: size, glyphSize: icon), to: item)
+                BadgeGeometry.badgeRectAX(iconAX: iconAX, corner: a.corner, badgeSize: size, glyphSize: icon), to: item)
             rect.origin.y = bounds.height - rect.maxY
-            let iconRect = CGRect(x: item.midX - icon / 2, y: bounds.height - item.midY - icon / 2, width: icon, height: icon)
+            let iconRect = CGRect(x: iconAX.minX, y: bounds.height - item.midY - icon / 2, width: icon, height: icon)
             sample.icon.frame = iconRect
             sample.badge.frame = rect
             sample.badge.contentsScale = scale

@@ -32,10 +32,31 @@ let slackIcon = CGRect(x: 3170, y: 3, width: 34, height: 24)
             == CGRect(x: 4, y: 4, width: 12, height: 12))
 }
 
+@Test func ownItemHasNormalPaddingPlusRoomOnTheBadgeSide() {
+    // 3 pt like any item on the icon's free side; on the badge's side, the half badge that sticks out.
+    #expect(BadgeGeometry.ownItemLayout(size: 12, badgeWidth: 12, iconSize: 19, corner: .bottomRight)
+            == .init(length: 28, iconX: 3))
+    #expect(BadgeGeometry.ownItemLayout(size: 12, badgeWidth: 12, iconSize: 19, corner: .topLeft)
+            == .init(length: 28, iconX: 6))
+    #expect(BadgeGeometry.ownItemLayout(size: 16, badgeWidth: 16, iconSize: 19, corner: .topRight)
+            == .init(length: 30, iconX: 3))
+}
+
 @Test func ownItemGrowsOnlyForWidePills() {
-    #expect(BadgeGeometry.ownItemLength(size: 12, badgeWidth: 12) == 32) // 16 pt icon + badge + 4, as before
-    #expect(BadgeGeometry.ownItemLength(size: 16, badgeWidth: 16) == 36)
-    #expect(BadgeGeometry.ownItemLength(size: 16, badgeWidth: 38) >= 40)
+    #expect(BadgeGeometry.ownItemLayout(size: 16, badgeWidth: 38, iconSize: 19, corner: .bottomRight)
+            == .init(length: 42, iconX: 3))
+    #expect(BadgeGeometry.ownItemLayout(size: 16, badgeWidth: 38, iconSize: 19, corner: .bottomLeft)
+            == .init(length: 42, iconX: 20))
+}
+
+@Test func ownItemBadgeFitsWithoutClamping() {
+    for corner in [Corner.topLeft, .topRight, .bottomLeft, .bottomRight] {
+        let layout = BadgeGeometry.ownItemLayout(size: 12, badgeWidth: 12, iconSize: 19, corner: corner)
+        let icon = CGRect(x: layout.iconX, y: 0, width: 19, height: 24)
+        let badge = BadgeGeometry.badgeRectAX(iconAX: icon, corner: corner, badgeSize: CGSize(width: 12, height: 12),
+                                              glyphSize: 19)
+        #expect(badge.minX >= 0 && badge.maxX <= layout.length)
+    }
 }
 
 @Test func overlayRoomFitsTheRippleAroundWidePills() {
@@ -64,6 +85,6 @@ let slackIcon = CGRect(x: 3170, y: 3, width: 34, height: 24)
 }
 
 @Test func ownItemMakesRoomForTheIconSize() {
-    #expect(BadgeGeometry.ownItemLength(size: 12, badgeWidth: 12, iconSize: 20) == 36)
-    #expect(BadgeGeometry.ownItemLength(size: 12, badgeWidth: 12, iconSize: 22) == 38)
+    #expect(BadgeGeometry.ownItemLayout(size: 12, badgeWidth: 12, iconSize: 16, corner: .bottomRight).length == 25)
+    #expect(BadgeGeometry.ownItemLayout(size: 12, badgeWidth: 12, iconSize: 22, corner: .bottomRight).length == 31)
 }

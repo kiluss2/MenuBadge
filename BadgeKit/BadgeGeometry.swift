@@ -46,10 +46,30 @@ public enum BadgeGeometry {
         CGRect(x: r.minX, y: primaryScreenMaxY - r.maxY, width: r.width, height: r.height)
     }
 
-    /// MenuBadge's own item: room for the icon plus a badge on its corner; wider only when a pill
-    /// ("999+" at a large size) would not fit, so the item keeps its width as counts change.
-    public static func ownItemLength(size: Double, badgeWidth: Double, iconSize: Double = 16) -> Double {
-        max(iconSize + size + 4, badgeWidth + 4)
+    /// Space a menu bar item leaves on each side of its icon (a 24 pt square item around a 19 pt
+    /// icon leaves 2.5 pt).
+    public static let itemPadding = 3.0
+
+    /// Width of MenuBadge's own item and where its icon starts.
+    public struct OwnItemLayout: Equatable, Sendable {
+        public let length: Double
+        public let iconX: Double
+
+        public init(length: Double, iconX: Double) {
+            self.length = length
+            self.iconX = iconX
+        }
+    }
+
+    /// MenuBadge's own item: the usual padding on the icon's free side, and on the badge's side the
+    /// half badge that sticks out of the icon's corner, so the icon sits as close to its neighbours
+    /// as any other icon. The width does not depend on the count (no jumps as counts change), except
+    /// for a pill too wide to fit ("999+" at a large size).
+    public static func ownItemLayout(size: Double, badgeWidth: Double, iconSize: Double, corner: Corner) -> OwnItemLayout {
+        let badgeSide = max(itemPadding, (size / 2).rounded(.up))
+        let length = max(itemPadding + iconSize + badgeSide, badgeWidth + 4)
+        let left = corner == .topLeft || corner == .bottomLeft
+        return OwnItemLayout(length: length, iconX: left ? length - itemPadding - iconSize : itemPadding)
     }
 
     /// Room around a badge in the overlay panel for the 2.2x ripple ring (0.6 of the badge on each
