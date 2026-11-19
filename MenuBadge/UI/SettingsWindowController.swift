@@ -36,7 +36,22 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         NSApp.activate()
         window?.makeKeyAndOrderFront(nil)
         window?.orderFrontRegardless()
+        parkColorPanel()
     }
+
+    /// The colour wells open the shared Colors panel wherever it last was, often a corner of
+    /// another screen; keep it beside this window while it is closed so it opens next to it.
+    private func parkColorPanel() {
+        guard let window, let screen = window.screen else { return }
+        let panel = NSColorPanel.shared
+        guard !panel.isVisible else { return }
+        panel.setFrame(PanelPlacement.beside(window.frame, panel: panel.frame.size, in: screen.visibleFrame),
+                       display: false)
+    }
+
+    func windowDidMove(_ notification: Notification) { parkColorPanel() }
+
+    func windowDidResize(_ notification: Notification) { parkColorPanel() }
 
     func windowWillClose(_ notification: Notification) {
         window?.contentViewController = nil
