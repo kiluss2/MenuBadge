@@ -9,6 +9,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let engine: BadgeEngine
     private let updater: UpdateChecker
     private var window: NSWindow?
+    /// Watches clicks in this window to open the Colors panel beside the colour well clicked.
+    private var clickMonitor: Any?
 
     init(store: SettingsStore, engine: BadgeEngine, updater: UpdateChecker) {
         self.store = store
@@ -30,6 +32,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             window.setFrameAutosaveName("MenuBadgeSettings")
             window.delegate = self
             self.window = window
+            clickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+                MainActor.assumeIsolated { self?.placeColorPanel(for: event) }
+                return event
+            }
         }
         // A menu bar app is not active when its menu is used, and macOS may turn down the
         // activation; bring the window to the front anyway so one click is enough.
@@ -49,11 +55,31 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
                        display: false)
     }
 
+    /// Runs before the click reaches a colour well, so the panel opens right beside that well.
+    private func placeColorPanel(for event: NSEvent) {
+        guard let window, event.window === window, let content = window.contentView, let screen = window.screen,
+              let well = Self.colorWells(in: content).first(where: { well in
+                  well.convert(well.bounds, to: nil).contains(event.locationInWindow)
+              })
+        else { return }
+        let wellOnScreen = window.convertToScreen(well.convert(well.bounds, to: nil))
+        let panel = NSColorPanel.shared
+        panel.setFrame(PanelPlacement.beside(wellOnScreen, panel: panel.frame.size, in: screen.visibleFrame),
+                       display: panel.isVisible)
+    }
+
+    private static func colorWells(in view: NSView) -> [NSColorWell] {
+        if let well = view as? NSColorWell { return [well] }
+        return view.subviews.flatMap(colorWells)
+    }
+
     func windowDidMove(_ notification: Notification) { parkColorPanel() }
 
     func windowDidResize(_ notification: Notification) { parkColorPanel() }
 
     func windowWillClose(_ notification: Notification) {
+        if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
+        clickMonitor = nil
         window?.contentViewController = nil
         window?.delegate = nil
         window = nil
