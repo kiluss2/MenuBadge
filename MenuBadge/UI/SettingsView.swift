@@ -1,3 +1,4 @@
+import AppKit
 import BadgeKit
 import SwiftUI
 
@@ -21,5 +22,6 @@ struct SettingsView: View {
             DetailView(store: store, engine: engine, selection: $selection)
         }
         .frame(minWidth: 680, minHeight: 460)
+        .onChange(of: selection) { SettingsWindowController.closeColorPanel() }
     }
 }

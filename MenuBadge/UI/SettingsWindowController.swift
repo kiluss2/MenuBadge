@@ -77,7 +77,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     func windowDidResize(_ notification: Notification) { parkColorPanel() }
 
+    /// The colour well that opened the Colors panel goes away with its page or this window; left
+    /// open, the panel would edit nothing (and macOS puts back its Opacity slider).
+    static func closeColorPanel() {
+        if NSColorPanel.sharedColorPanelExists { NSColorPanel.shared.close() }
+    }
+
     func windowWillClose(_ notification: Notification) {
+        Self.closeColorPanel()
         if let clickMonitor { NSEvent.removeMonitor(clickMonitor) }
         clickMonitor = nil
         window?.contentViewController = nil
