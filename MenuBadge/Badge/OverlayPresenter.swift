@@ -18,7 +18,8 @@ final class OverlayPresenter {
         panel.hasShadow = false
         panel.ignoresMouseEvents = true // clicks reach the app's icon underneath
         panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
-        panel.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
+        // Transient: Mission Control hides it with the menu bar instead of leaving it over the Spaces bar.
+        panel.collectionBehavior = [.canJoinAllSpaces, .transient, .ignoresCycle]
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
         let host = NSView()
