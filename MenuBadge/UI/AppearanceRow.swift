@@ -2,7 +2,7 @@ import BadgeKit
 import SwiftUI
 
 /// One row of the look editor. On an app's page its label says whether the app sets the value
-/// itself or follows Default Look, and a set value has a button to follow Default Look again.
+/// itself or follows Default Look, and ↺ before a set value makes it follow Default Look again.
 struct AppearanceRow<Control: View>: View {
     let title: String
     let field: AppearanceField
@@ -14,13 +14,10 @@ struct AppearanceRow<Control: View>: View {
     var body: some View {
         LabeledContent {
             HStack {
-                control
-                if isSet {
-                    Button("Use Default Look for \(title)", systemImage: "arrow.uturn.backward", action: resetField)
-                        .labelStyle(.iconOnly)
-                        .buttonStyle(.borderless)
-                        .help("Use the Default Look value")
+                if overrides != nil {
+                    UseDefaultLookButton(title: title, isSet: isSet, action: resetField)
                 }
+                control
             }
         } label: {
             Text(title)

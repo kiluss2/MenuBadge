@@ -32,6 +32,8 @@ struct AppDetailPane: View {
                     }
                     LabeledContent {
                         HStack {
+                            UseDefaultLookButton(title: "MenuBadge item", isSet: entry.visibility != nil,
+                                                 action: followDefaultVisibility)
                             Picker("MenuBadge item", selection: $store[visibilityOf: bundleID]) {
                                 ForEach(OwnItemVisibility.allCases, id: \.self) { visibility in
                                     Text(DefaultMark.title(VisibilityText.name(visibility),
@@ -40,13 +42,6 @@ struct AppDetailPane: View {
                                 }
                             }
                             .labelsHidden()
-                            if entry.visibility != nil {
-                                Button("Use Default Look for MenuBadge item", systemImage: "arrow.uturn.backward",
-                                       action: followDefaultVisibility)
-                                    .labelStyle(.iconOnly)
-                                    .buttonStyle(.borderless)
-                                    .help("Use the Default Look value")
-                            }
                         }
                     } label: {
                         Text("MenuBadge item")
