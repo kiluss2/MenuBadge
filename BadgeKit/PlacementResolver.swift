@@ -7,6 +7,8 @@ public enum PlacementDecision: Equatable, Sendable {
     case overlay(iconAX: CGRect)
     /// On MenuBadge's own item for the app (the app icon, with or without the badge).
     case ownItem(showBadge: Bool)
+    /// Leave the badge as it is: the app's icon is missing only for a moment.
+    case keep
 }
 
 public struct PlacementInput: Sendable {
@@ -18,6 +20,8 @@ public struct PlacementInput: Sendable {
     public var hasBadge: Bool
     /// The icon was not found on this tick but its absence is not confirmed yet (`IconPresence`).
     public var iconPending = false
+    /// The icon was found before it went missing (Mission Control hides every menu bar icon).
+    public var iconWasSeen = false
     /// Show the badge wherever it can be seen (demo / preview).
     public var forceVisible = false
 
@@ -39,6 +43,9 @@ public func resolvePlacement(_ input: PlacementInput) -> PlacementDecision {
     if input.placement != .ownItem, let icon = input.iconAX, input.iconOnScreen {
         return input.hasBadge ? .overlay(iconAX: icon) : .none
     }
+    // The icon was there a moment ago (Mission Control closing, the app busy): keep the badge where
+    // it is rather than flash a MenuBadge item until the icon is back.
+    if input.iconPending && input.iconWasSeen && input.placement != .ownItem { return .keep }
     // Icon missing for a tick or two (launching, quitting, busy): keep a badge visible, but do not
     // put up an empty MenuBadge item that would vanish a second later.
     if input.iconPending && input.placement != .ownItem {

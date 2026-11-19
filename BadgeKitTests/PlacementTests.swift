@@ -55,6 +55,18 @@ private func input(_ p: Placement = .auto, _ v: OwnItemVisibility = .always, run
     #expect(resolvePlacement(i) == .ownItem(showBadge: true))
 }
 
+@Test func anIconSeenBeforeIsHeldWhileItIsMissingForAMoment() {
+    // Mission Control: every menu bar icon drops out of Accessibility until it closes.
+    var i = input(iconAX: nil)
+    i.iconPending = true
+    i.iconWasSeen = true
+    #expect(resolvePlacement(i) == .keep)
+    i.hasBadge = false
+    #expect(resolvePlacement(i) == .keep)
+    i.placement = .ownItem   // a forced MenuBadge item does not depend on the app's icon
+    #expect(resolvePlacement(i) == .ownItem(showBadge: false))
+}
+
 @Test func forceVisibleAlwaysShowsTheBadge() {
     var notRunning = input(running: false, iconAX: nil)
     notRunning.forceVisible = true

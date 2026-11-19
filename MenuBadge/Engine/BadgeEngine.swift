@@ -26,6 +26,8 @@ final class BadgeEngine {
     /// The demo's label for this tick (nil = demo shows no badge right now).
     @ObservationIgnored private var demoLabel: String?
     @ObservationIgnored private var iconPresence: [String: IconPresence] = [:]
+    /// Where each running app's menu bar icon was last found, while it is not confirmed gone.
+    @ObservationIgnored private var lastIconFrames: [String: CGRect] = [:]
     /// MenuBadge's own icon, which carries every badge in compact mode.
     @ObservationIgnored weak var menuBarItem: MenuBarItem?
     /// What the compact item last showed, to redraw only on a change; nil = not in compact mode.
@@ -291,12 +293,21 @@ final class BadgeEngine {
         // launching has not put up its icon yet.
         if app?.isTerminated == true { app = nil }
 
+        let iconFound = iconAX != nil && iconOnScreen
+        // While Mission Control covers the menu bar the icon is not gone: do not count the miss.
+        let covered = app != nil && !iconFound
+            && lastIconFrames[id].map { MenuBarCover.covers(CGPoint(x: $0.midX, y: $0.midY)) } == true
         var presence = IconPresence.State.pending
         if let app {
             var tracker = iconPresence[id] ?? IconPresence()
-            presence = tracker.observe(found: iconAX != nil && iconOnScreen)
+            if !covered { presence = tracker.observe(found: iconFound) }
             if !app.isFinishedLaunching && presence == .absent { presence = .pending }
             iconPresence[id] = tracker
+            switch presence {
+            case .present: lastIconFrames[id] = iconAX
+            case .absent: lastIconFrames[id] = nil
+            case .pending: break
+            }
             store.update(id) { e in
                 // Only settled readings are stored, so a launch or quit never flips this.
                 if presence != .pending { e.lastSeenHadOwnIcon = presence == .present }
@@ -304,6 +315,7 @@ final class BadgeEngine {
             }
         } else {
             iconPresence[id] = nil
+            lastIconFrames[id] = nil
         }
         let appearance = store.settings.appearance(for: id)
         let current = store.settings.apps.first { $0.id == id } ?? entry
@@ -311,10 +323,12 @@ final class BadgeEngine {
             placement: current.placement, visibility: store.settings.visibility(for: id), isRunning: app != nil,
             iconAX: iconAX, iconOnScreen: iconOnScreen, hasBadge: label != nil)
         input.iconPending = app != nil && presence == .pending
+        input.iconWasSeen = lastIconFrames[id] != nil
         input.forceVisible = inDemo
         let decision = resolvePlacement(input)
+        if decision == .keep { return }
         let location: AppRuntime.Location = switch decision {
-        case .none: .hidden
+        case .none, .keep: .hidden
         case .overlay: .appIcon
         case .ownItem: .ownItem
         }
@@ -327,6 +341,8 @@ final class BadgeEngine {
         if grew, !inDemo, let label { alertIfMenuBarHidden(current, label) }
 
         switch decision {
+        case .keep:
+            return
         case .none:
             overlays[id]?.hide()
             ownItems[id]?.hide()
@@ -391,5 +407,6 @@ final class BadgeEngine {
         overlays.removeValue(forKey: id)?.hide()
         ownItems.removeValue(forKey: id)?.hide()
         lastLabels[id] = nil
+        lastIconFrames[id] = nil
     }
 }
